@@ -1,12 +1,12 @@
 import { useRouter } from "next/router"
-import { useAuth } from "../react-utils/auth"
+import { useAuth } from "./auth"
 
 export const AccessPolicyIDs = {
   USER_IS_AUTHENTICATED: Symbol("USER_IS_AUTHENTICATED"),
   USER_IS_GUEST: Symbol("USER_IS_GUEST")
 }
 
-export default function AccessPolicyEnforcer({ accessPolicies, children }) {
+export function ContentFirewall({ accessPolicies, children }) {
   const router = useRouter()
   const auth = useAuth()
 

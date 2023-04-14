@@ -1,8 +1,14 @@
 import { Auth, Hub } from "aws-amplify"
-import { useEffect, useState } from "react"
-import { AuthContext } from "../react-utils/auth"
+import { createContext, useEffect, useContext, useState } from "react"
 
-export default function AuthProvider({ children, placeholder }) {
+export const AuthContext = createContext({
+  userIsAuthenticated: false,
+  user: null
+})
+
+export const useAuth = () => useContext(AuthContext)
+
+export function AuthProvider({ children, placeholder }) {
   const [isCheckingForUser, setIsCheckingForUser] = useState(true)
   const [authContextValue, setAuthContextValue] = useState({
     userIsAuthenticated: false,

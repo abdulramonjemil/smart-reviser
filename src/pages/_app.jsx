@@ -1,8 +1,8 @@
 import { Amplify } from "aws-amplify"
 import { useMemo } from "react"
 
-import AuthProvider from "../components/auth-provider"
-import AccessPolicyEnforcer from "../components/access-policy-enforcer"
+import { AuthProvider } from "../controllers/auth"
+import { ContentFirewall } from "../controllers/firewall"
 import awsExports from "../aws-exports"
 
 import "../styles/globals.scss"
@@ -20,9 +20,9 @@ export default function App({ Component, pageProps }) {
 
   return (
     <AuthProvider placeholder={placeholder}>
-      <AccessPolicyEnforcer accessPolicies={Component.accessPolicies || []}>
+      <ContentFirewall accessPolicies={Component.accessPolicies || []}>
         <Component {...pageProps} />
-      </AccessPolicyEnforcer>
+      </ContentFirewall>
     </AuthProvider>
   )
 }
