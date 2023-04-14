@@ -18,7 +18,7 @@ export function ContentFirewall({ accessPolicies, children }) {
   let redirectURL = null
 
   for (let i = 0; i < accessPolicies.length; i += 1) {
-    const { id: policyId, alternatePage } = accessPolicies[i]
+    const { id: policyId, alternateSource } = accessPolicies[i]
     const policyVerifier = accessPolicyVerifiers[policyId]
 
     if (typeof policyVerifier !== "function")
@@ -26,7 +26,7 @@ export function ContentFirewall({ accessPolicies, children }) {
 
     const policyIsMet = policyVerifier() === true
     if (!policyIsMet) {
-      redirectURL = alternatePage
+      redirectURL = alternateSource
       break
     }
   }

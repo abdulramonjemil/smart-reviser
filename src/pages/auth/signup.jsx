@@ -10,7 +10,7 @@ import {
 } from "../../components/auth"
 
 import Layout from "../../components/layout"
-import { AccessPolicyIDs } from "../../components/access-policy-enforcer"
+import { AccessPolicyIDs } from "../../controllers/firewall"
 
 import {
   EMAIL_REGEXES,
@@ -462,6 +462,6 @@ export default function SignUp() {
 SignUp.accessPolicies = [
   {
     id: AccessPolicyIDs.USER_IS_GUEST,
-    alternatePage: HOME_PAGE_URL
+    alternateSource: HOME_PAGE_URL
   }
 ]

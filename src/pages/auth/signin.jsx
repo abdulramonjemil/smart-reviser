@@ -17,7 +17,7 @@ import { getFormInputValueFromId } from "../../lib/form"
 import { scrollToPageTop } from "../../lib/navigation"
 
 import AuthStyles from "../../styles/includes/auth.module.scss"
-import { AccessPolicyIDs } from "../../components/access-policy-enforcer"
+import { AccessPolicyIDs } from "../../controllers/firewall"
 
 const INPUT_IDENTIFIERS = {
   EMAIL: "email",
@@ -143,6 +143,6 @@ export default function SignIn() {
 SignIn.accessPolicies = [
   {
     id: AccessPolicyIDs.USER_IS_GUEST,
-    alternatePage: HOME_PAGE_URL
+    alternateSource: HOME_PAGE_URL
   }
 ]

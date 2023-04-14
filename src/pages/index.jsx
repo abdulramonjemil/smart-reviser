@@ -1,4 +1,4 @@
-import { AccessPolicyIDs } from "../components/access-policy-enforcer"
+import { AccessPolicyIDs } from "../controllers/firewall"
 import Layout from "../components/layout"
 import { SIGN_IN_PAGE_URL } from "../constants/page-urls"
 import { SITE_TITLE } from "../constants/site-details"
@@ -12,6 +12,6 @@ export default function Home() {
 Home.accessPolicies = [
   {
     id: AccessPolicyIDs.USER_IS_AUTHENTICATED,
-    alternatePage: SIGN_IN_PAGE_URL
+    alternateSource: SIGN_IN_PAGE_URL
   }
 ]
