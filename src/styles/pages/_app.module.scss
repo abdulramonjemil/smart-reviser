@@ -1,0 +1,11 @@
+@use "../partials/utils";
+
+.WhitePage {
+  background-color: white;
+  display: fixed;
+  height: 100vh;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  z-index: 9999;
+}

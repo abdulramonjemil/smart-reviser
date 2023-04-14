@@ -1,5 +1,6 @@
 {
-  "semi": false,
   "arrowParens": "always",
+  "printWidth": 80,
+  "semi": false,
   "trailingComma": "none"
 }

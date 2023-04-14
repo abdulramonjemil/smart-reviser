@@ -33,3 +33,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# aws amplify
+/amplify
+
+# aws config
+/src/aws-exports.js

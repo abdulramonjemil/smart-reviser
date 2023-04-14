@@ -12,7 +12,7 @@
     "react/jsx-props-no-spreading": "off",
     "no-param-reassign": "off",
     "jsx-a11y/anchor-is-valid": "off",
-    "import/extensions": ["error", "always", { "js": "never" }],
+    "import/extensions": ["error", "always", { "js": "never", "jsx": "never" }],
     "lines-between-class-members": [
       "error",
       "always",

@@ -16,6 +16,7 @@
         "ignoreSelectors": [":export"]
       }
     ],
+    "property-no-vendor-prefix": null,
     "scss/at-if-no-null": null,
     "scss/at-use-no-unnamespaced": true,
     "scss/dollar-variable-empty-line-before": null,
