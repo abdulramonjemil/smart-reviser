@@ -2,6 +2,8 @@ import { SITE_TITLE } from "../constants/site-details"
 import Styles from "../styles/components/auth.module.scss"
 
 export function AuthFeedback({ message, type }) {
+  if (typeof message === "string" && message !== "") return ""
+
   const feedbackClasses = {
     error: Styles.AuthForm__Feedback_error,
     success: Styles.AuthForm__Feedback_success

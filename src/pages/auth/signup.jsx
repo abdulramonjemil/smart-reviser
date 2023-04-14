@@ -406,9 +406,7 @@ export default function SignUp() {
         <AuthContainer
           title={signUpConfirmation.isActive ? "Confirm Sign Up" : "Sign Up"}
         >
-          {typeof feedback.message === "string" && feedback.message !== "" && (
-            <AuthFeedback {...feedback} />
-          )}
+          <AuthFeedback {...feedback} />
 
           {signUpConfirmation.isActive ? (
             <ConfirmSignUpForm

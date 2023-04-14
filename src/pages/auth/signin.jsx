@@ -118,9 +118,7 @@ export default function SignIn() {
     <div className={AuthStyles.AuthContainer}>
       <Layout pageTitle={`Sign In | ${SITE_TITLE}`}>
         <AuthContainer title="Sign In">
-          {typeof feedback.message === "string" && feedback.message !== "" && (
-            <AuthFeedback {...feedback} />
-          )}
+          <AuthFeedback {...feedback} />
           <SignInForm
             isLoading={isLoading}
             setFeedback={setFeedback}
