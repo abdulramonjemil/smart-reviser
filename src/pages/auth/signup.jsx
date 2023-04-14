@@ -48,6 +48,7 @@ const INPUT_IDENTIFIERS = {
 const MESSAGES_FOR_KNOWN_SIGN_UP_ERRORS = {
   CodeDeliveryFailureException:
     "Couldn't deliver verification code successfully, please try again.",
+  InvalidParameterException: "An error occured. Some inputs may be invalid",
   InvalidPasswordException: "Password doesn't meet the requirements.",
   NotAuthorizedException: "An error occured. Please check and try again.",
   TooManyRequestsException: "Too many requests. Please try again later.",
@@ -67,6 +68,7 @@ const MESSAGES_FOR_KNOWN_SIGN_UP_CONFIRMATION_ERRORS = {
     "You have entered a wrong code. Please check and re-enter the code.",
   ExpiredCodeException:
     "The code you entered has expired. Please request a new code.",
+  InvalidParameterException: "An error occured. Some inputs may be invalid",
   LimitExceededException: "An error occured. Please try again later.",
   NotAuthorizedException:
     "An error occured. Please check and re-enter the code or log in again.",

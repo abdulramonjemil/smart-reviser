@@ -30,6 +30,7 @@ const INPUT_IDENTIFIERS = {
  * These are the errors specific to the user
  */
 const MESSAGES_FOR_KNOWN_SIGN_IN_ERRORS = {
+  InvalidParameterException: "Email or password incorrect",
   NotAuthorizedException:
     "An error occured. The email or password might be invalid.",
   PasswordResetRequiredException:
@@ -48,6 +49,7 @@ function SignInForm({ isLoading, setFeedback, setIsLoading }) {
   async function handleSignInFormSubmit(event) {
     event.preventDefault()
     setIsLoading(true)
+    setFeedback({ message: "", type: null })
 
     const form = event.target
     const email = getFormInputValueFromId(form, EMAIL_IDENTIFIER)
