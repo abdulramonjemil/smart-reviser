@@ -1,6 +1,7 @@
 import Head from "next/head"
 
-export default function Layout({ pageTitle, children }) {
+// eslint-disable-next-line import/prefer-default-export
+export function BasicLayout({ pageTitle, children }) {
   return (
     <>
       <Head>

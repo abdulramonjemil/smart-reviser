@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { useRouter } from "next/router"
 import { Auth } from "aws-amplify"
-import Layout from "../../components/layout"
+import { BasicLayout } from "../../components/layout"
 import {
   AuthContainer,
   AuthFeedback,
@@ -116,7 +116,7 @@ export default function SignIn() {
 
   return (
     <div className={AuthStyles.AuthContainer}>
-      <Layout pageTitle={`Sign In | ${SITE_TITLE}`}>
+      <BasicLayout pageTitle={`Sign In | ${SITE_TITLE}`}>
         <AuthContainer title="Sign In">
           <AuthFeedback {...feedback} />
           <SignInForm
@@ -133,7 +133,7 @@ export default function SignIn() {
             instead
           </p>
         </AuthContainer>
-      </Layout>
+      </BasicLayout>
     </div>
   )
 }

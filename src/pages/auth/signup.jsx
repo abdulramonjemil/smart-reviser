@@ -9,7 +9,7 @@ import {
   TextInput
 } from "../../components/auth"
 
-import Layout from "../../components/layout"
+import { BasicLayout } from "../../components/layout"
 import { AccessPolicyIDs } from "../../controllers/firewall"
 
 import {
@@ -402,7 +402,7 @@ export default function SignUp() {
 
   return (
     <div className={AuthStyles.AuthContainer}>
-      <Layout pageTitle={`Sign Up | ${SITE_TITLE}`}>
+      <BasicLayout pageTitle={`Sign Up | ${SITE_TITLE}`}>
         <AuthContainer
           title={signUpConfirmation.isActive ? "Confirm Sign Up" : "Sign Up"}
         >
@@ -452,7 +452,7 @@ export default function SignUp() {
             instead
           </p>
         </AuthContainer>
-      </Layout>
+      </BasicLayout>
     </div>
   )
 }
