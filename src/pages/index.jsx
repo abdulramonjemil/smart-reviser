@@ -1,4 +1,4 @@
-import { AccessPolicyTypes } from "../controllers/firewall"
+import { AccessPolicyTypes } from "../controllers/policy"
 import { BasicLayout } from "../components/layout"
 import { SIGN_IN_PAGE_URL } from "../constants/page-urls"
 import { SITE_TITLE } from "../constants/site-details"
