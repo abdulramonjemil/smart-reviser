@@ -13,11 +13,10 @@ import {
 import { SITE_TITLE } from "../../constants/site-details"
 import { HOME_PAGE_URL, SIGN_UP_PAGE_URL } from "../../constants/page-urls"
 
-import { getFormInputValueFromId } from "../../lib/form"
 import { scrollToPageTop } from "../../lib/navigation"
 
 import AuthStyles from "../../styles/includes/auth.module.scss"
-import { AccessPolicyIDs } from "../../controllers/firewall"
+import { AccessPolicyTypes } from "../../controllers/firewall"
 
 const INPUT_IDENTIFIERS = {
   EMAIL: "email",
@@ -48,12 +47,13 @@ function SignInForm({ isLoading, setFeedback, setIsLoading }) {
 
   async function handleSignInFormSubmit(event) {
     event.preventDefault()
-    setIsLoading(true)
-    setFeedback({ message: "", type: null })
 
-    const form = event.target
-    const email = getFormInputValueFromId(form, EMAIL_IDENTIFIER)
-    const password = getFormInputValueFromId(form, PASSWORD_IDENTIFIER)
+    // Get form data before setting isLoading (which disables the form)
+    const formData = new FormData(event.target)
+    const email = formData.get(EMAIL_IDENTIFIER)
+    const password = formData.get(PASSWORD_IDENTIFIER)
+
+    setIsLoading(true)
 
     try {
       await Auth.signIn(email, password)
@@ -64,7 +64,7 @@ function SignInForm({ isLoading, setFeedback, setIsLoading }) {
       scrollToPageTop()
 
       setTimeout(() => {
-        router.replace(HOME_PAGE_URL)
+        router.push(HOME_PAGE_URL)
       }, 2000)
     } catch (error) {
       const errorName = error.name
@@ -140,7 +140,7 @@ export default function SignIn() {
 
 SignIn.accessPolicies = [
   {
-    id: AccessPolicyIDs.USER_IS_GUEST,
+    type: AccessPolicyTypes.USER_IS_GUEST,
     alternateSource: HOME_PAGE_URL
   }
 ]

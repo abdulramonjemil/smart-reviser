@@ -10,7 +10,7 @@ import {
 } from "../../components/auth"
 
 import { BasicLayout } from "../../components/layout"
-import { AccessPolicyIDs } from "../../controllers/firewall"
+import { AccessPolicyTypes } from "../../controllers/firewall"
 
 import {
   EMAIL_REGEXES,
@@ -117,7 +117,6 @@ function SignUpForm({
     const passwordConfirmation = formData.get(PASSWORD_CONFIRMATION_IDENTIFIER)
 
     setIsLoading(true)
-    setFeedback({ message: "", type: null })
     let errorMessageToUse = null
 
     // Validate input one more time
@@ -150,6 +149,7 @@ function SignUpForm({
         }
       })
 
+      setFeedback({ message: "", type: null })
       setSignUpConfirmation({ isActive: true, emailToConfirm: email })
       setIsLoading(false)
       scrollToPageTop()
@@ -261,7 +261,6 @@ function ConfirmSignUpForm({
     const confirmationCode = formData.get(CONFIRMATION_CODE_IDENTIFIER)
 
     setIsLoading(true)
-    setFeedback({ message: "", type: null })
 
     try {
       await Auth.confirmSignUp(email, confirmationCode, {
@@ -307,8 +306,6 @@ function ConfirmSignUpForm({
       return
     }
 
-    // Change button state
-    setFeedback({ message: "", type: null })
     setIsResendingCode(true)
 
     try {
@@ -452,7 +449,7 @@ export default function SignUp() {
 
 SignUp.accessPolicies = [
   {
-    id: AccessPolicyIDs.USER_IS_GUEST,
+    type: AccessPolicyTypes.USER_IS_GUEST,
     alternateSource: HOME_PAGE_URL
   }
 ]
