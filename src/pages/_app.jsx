@@ -3,8 +3,9 @@ import { useMemo } from "react"
 
 import { AuthProvider } from "../controllers/auth"
 import {
-  ContentFirewall,
-  useAccessPolicyManager
+  AccessPolicyManagerContext,
+  AccessPolicyManager,
+  ContentFirewall
 } from "../controllers/firewall"
 import awsExports from "../aws-exports"
 
@@ -20,17 +21,16 @@ function WhitePage() {
 
 export default function App({ Component, pageProps }) {
   const placeholder = useMemo(() => <WhitePage />, [])
-  const accessPolicyManager = useAccessPolicyManager()
-
-  // Make sure all access policies are taken into consideration when rendering a
-  // new page component
-  accessPolicyManager.resetIgnoredTypes()
 
   return (
-    <AuthProvider placeholder={placeholder}>
-      <ContentFirewall accessPolicies={Component.accessPolicies || []}>
-        <Component {...pageProps} />
-      </ContentFirewall>
-    </AuthProvider>
+    <AccessPolicyManagerContext.Provider
+      value={AccessPolicyManager(Component.accessPolicies || [])}
+    >
+      <AuthProvider placeholder={placeholder}>
+        <ContentFirewall>
+          <Component {...pageProps} />
+        </ContentFirewall>
+      </AuthProvider>
+    </AccessPolicyManagerContext.Provider>
   )
 }

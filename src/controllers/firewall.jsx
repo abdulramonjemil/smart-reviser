@@ -1,4 +1,5 @@
 import { useRouter } from "next/router"
+import { createContext, useContext } from "react"
 import { useAuth } from "./auth"
 
 export const AccessPolicyTypes = {
@@ -6,9 +7,10 @@ export const AccessPolicyTypes = {
   USER_IS_GUEST: "USER_IS_GUEST"
 }
 
-const AccessPolicyManager = (() => {
+export const AccessPolicyManager = (accessPolicies) => {
   const ignoredTypes = new Set()
   return {
+    accessPolicies,
     ignoreType(policyType) {
       if (!Object.prototype.hasOwnProperty.call(AccessPolicyTypes, policyType))
         throw new RangeError(`Unknown policy: '${policyType}'`)
@@ -30,15 +32,18 @@ const AccessPolicyManager = (() => {
       ignoredTypes.clear()
     }
   }
-})()
+}
 
-export const useAccessPolicyManager = () => AccessPolicyManager
+export const AccessPolicyManagerContext = createContext(AccessPolicyManager([]))
+export const useAccessPolicyManager = () =>
+  useContext(AccessPolicyManagerContext)
 
-export function ContentFirewall({ accessPolicies, children }) {
+export function ContentFirewall({ children }) {
   const router = useRouter()
   const auth = useAuth()
   const accessPolicyManager = useAccessPolicyManager()
 
+  const { accessPolicies } = accessPolicyManager
   const accessPolicyVerifiers = {
     [AccessPolicyTypes.USER_IS_AUTHENTICATED]: () => auth.userIsAuthenticated,
     [AccessPolicyTypes.USER_IS_GUEST]: () => !auth.userIsAuthenticated
