@@ -10,7 +10,7 @@ import {
 } from "../../components/auth"
 
 import { BasicLayout } from "../../components/layout"
-import { AccessPolicyTypes } from "../../controllers/firewall"
+import { AccessPolicyTypes } from "../../controllers/policy"
 
 import {
   EMAIL_REGEXES,
