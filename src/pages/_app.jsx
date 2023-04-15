@@ -6,7 +6,7 @@ import {
   AccessPolicyManagerContext,
   AccessPolicyManager,
   ContentFirewall
-} from "../controllers/firewall"
+} from "../controllers/policy"
 import awsExports from "../aws-exports"
 
 import "../styles/globals.scss"

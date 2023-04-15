@@ -19,7 +19,7 @@ import AuthStyles from "../../styles/includes/auth.module.scss"
 import {
   AccessPolicyTypes,
   useAccessPolicyManager
-} from "../../controllers/firewall"
+} from "../../controllers/policy"
 
 const INPUT_IDENTIFIERS = {
   EMAIL: "email",
