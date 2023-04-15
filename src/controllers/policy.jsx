@@ -7,7 +7,7 @@ export const AccessPolicyTypes = {
   USER_IS_GUEST: "USER_IS_GUEST"
 }
 
-export const AccessPolicyManager = (accessPolicies) => {
+export function AccessPolicyManager(accessPolicies) {
   const ignoredTypes = new Set()
   return {
     accessPolicies,
