@@ -300,7 +300,6 @@ function ConfirmSignUpForm({
     /**
      * Verification needed since the button isn't a submit button, making the
      * 'required' attribute not prevent the clicking of the button.
-     * The timeout is to prevent too many trials and flashing of loader
      */
     const emailInput = emailInputRef.current
     if (!emailInput.validity.valid) {
@@ -318,8 +317,6 @@ function ConfirmSignUpForm({
         message: "Code sent successfully.",
         type: "success"
       })
-      setIsResendingCode(false)
-      scrollToPageTop()
     } catch (error) {
       const errorName = error.name
       const knownMessageForError =
@@ -332,15 +329,15 @@ function ConfirmSignUpForm({
             : "An error occured, please try again later.",
         type: "error"
       })
-
-      setIsResendingCode(false)
-      scrollToPageTop()
     }
+
+    setIsResendingCode(false)
+    scrollToPageTop()
   }
 
   return (
     <AuthForm
-      disabled={isLoading}
+      disabled={isLoading || isResendingCode}
       handleFormSubmit={handleConfirmSignUpFormSubmit}
     >
       <TextInput
@@ -392,7 +389,7 @@ export default function SignUp() {
   const [isLoading, setIsLoading] = useState(false)
   const [feedback, setFeedback] = useState({ message: "", type: null })
   const [signUpConfirmation, setSignUpConfirmation] = useState({
-    isActive: false,
+    isActive: true,
     emailToConfirm: null
   })
 

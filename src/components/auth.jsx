@@ -23,7 +23,7 @@ export function AuthFeedback({ message, type }) {
 export function AuthForm({ children, disabled, handleFormSubmit }) {
   return (
     <form className={Styles.AuthForm__Element} onSubmit={handleFormSubmit}>
-      <fieldset disabled={typeof disableForm === "boolean" ? disabled : false}>
+      <fieldset disabled={typeof disabled === "boolean" ? disabled : false}>
         {children}
       </fieldset>
     </form>
