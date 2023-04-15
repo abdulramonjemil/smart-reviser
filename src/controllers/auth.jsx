@@ -26,15 +26,15 @@ export function AuthProvider({ children, placeholder }) {
       } catch (error) {
         setIsCheckingForUser(false)
       }
-    })()
 
-    Hub.listen("auth", ({ payload }) => {
-      const { event, data } = payload
-      if (event === "signIn")
-        setAuthContextValue({ userIsAuthenticated: true, user: data })
-      if (event === "signOut")
-        setAuthContextValue({ userIsAuthenticated: false, user: null })
-    })
+      Hub.listen("auth", ({ payload }) => {
+        const { event, data } = payload
+        if (event === "signIn")
+          setAuthContextValue({ userIsAuthenticated: true, user: data })
+        if (event === "signOut")
+          setAuthContextValue({ userIsAuthenticated: false, user: null })
+      })
+    })()
   }, [])
 
   return (
