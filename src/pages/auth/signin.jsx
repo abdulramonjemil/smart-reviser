@@ -16,7 +16,10 @@ import { HOME_PAGE_URL, SIGN_UP_PAGE_URL } from "../../constants/page-urls"
 import { scrollToPageTop } from "../../lib/navigation"
 
 import AuthStyles from "../../styles/includes/auth.module.scss"
-import { AccessPolicyTypes } from "../../controllers/firewall"
+import {
+  AccessPolicyTypes,
+  useAccessPolicyManager
+} from "../../controllers/firewall"
 
 const INPUT_IDENTIFIERS = {
   EMAIL: "email",
@@ -42,6 +45,8 @@ const MESSAGES_FOR_KNOWN_SIGN_IN_ERRORS = {
 
 function SignInForm({ isLoading, setFeedback, setIsLoading }) {
   const router = useRouter()
+  const accessPolicyManager = useAccessPolicyManager()
+
   const { EMAIL: EMAIL_IDENTIFIER, PASSWORD: PASSWORD_IDENTIFIER } =
     INPUT_IDENTIFIERS
 
@@ -56,6 +61,9 @@ function SignInForm({ isLoading, setFeedback, setIsLoading }) {
     setIsLoading(true)
 
     try {
+      // Prevent content firewall from redirecting immediately after sign In
+      accessPolicyManager.ignoreType(AccessPolicyTypes.USER_IS_GUEST)
+
       await Auth.signIn(email, password)
       setFeedback({
         message: "Logged in successfully, redirecting in 2 seconds...",
