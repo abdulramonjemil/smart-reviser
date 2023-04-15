@@ -2,7 +2,10 @@ import { Amplify } from "aws-amplify"
 import { useMemo } from "react"
 
 import { AuthProvider } from "../controllers/auth"
-import { ContentFirewall } from "../controllers/firewall"
+import {
+  ContentFirewall,
+  useAccessPolicyManager
+} from "../controllers/firewall"
 import awsExports from "../aws-exports"
 
 import "../styles/globals.scss"
@@ -17,6 +20,11 @@ function WhitePage() {
 
 export default function App({ Component, pageProps }) {
   const placeholder = useMemo(() => <WhitePage />, [])
+  const accessPolicyManager = useAccessPolicyManager()
+
+  // Make sure all access policies are taken into consideration when rendering a
+  // new page component
+  accessPolicyManager.resetIgnoredTypes()
 
   return (
     <AuthProvider placeholder={placeholder}>

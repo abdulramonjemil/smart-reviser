@@ -7,24 +7,27 @@ export const AccessPolicyTypes = {
 }
 
 const AccessPolicyManager = (() => {
-  const ignoredPolicyTypes = new Set()
+  const ignoredTypes = new Set()
   return {
     ignoreType(policyType) {
       if (!Object.prototype.hasOwnProperty.call(AccessPolicyTypes, policyType))
         throw new RangeError(`Unknown policy: '${policyType}'`)
-      ignoredPolicyTypes.add(policyType)
+      ignoredTypes.add(policyType)
     },
 
     isIgnoredType(policyType) {
-      return ignoredPolicyTypes.has(policyType)
+      return ignoredTypes.has(policyType)
     },
 
     includeType(policyType) {
       if (!Object.prototype.hasOwnProperty.call(AccessPolicyTypes, policyType))
         throw new RangeError(`Unknown policy: '${policyType}'`)
 
-      if (ignoredPolicyTypes.has(policyType))
-        ignoredPolicyTypes.delete(policyType)
+      if (ignoredTypes.has(policyType)) ignoredTypes.delete(policyType)
+    },
+
+    resetIgnoredTypes() {
+      ignoredTypes.clear()
     }
   }
 })()
