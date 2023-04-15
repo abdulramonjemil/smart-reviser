@@ -389,7 +389,7 @@ export default function SignUp() {
   const [isLoading, setIsLoading] = useState(false)
   const [feedback, setFeedback] = useState({ message: "", type: null })
   const [signUpConfirmation, setSignUpConfirmation] = useState({
-    isActive: true,
+    isActive: false,
     emailToConfirm: null
   })
 

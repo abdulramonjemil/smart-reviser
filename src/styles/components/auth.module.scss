@@ -155,6 +155,10 @@ $input-container-padding: 12px;
     transition: background-color linear 0.1s;
     width: 100%;
 
+    &:disabled {
+      cursor: not-allowed;
+    }
+
     &:focus {
       text-decoration: underline;
     }
