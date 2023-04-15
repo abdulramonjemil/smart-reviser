@@ -22,7 +22,6 @@ import {
 
 import { SITE_TITLE } from "../../constants/site-details"
 import { HOME_PAGE_URL, SIGN_IN_PAGE_URL } from "../../constants/page-urls"
-import { getFormInputValueFromId } from "../../lib/form"
 import { scrollToPageTop } from "../../lib/navigation"
 
 import AuthStyles from "../../styles/includes/auth.module.scss"
@@ -109,18 +108,16 @@ function SignUpForm({
 
   async function handleSignUpFormSubmit(event) {
     event.preventDefault()
+
+    // Read formdata before disabling input setting
+    const formData = new FormData(event.target)
+    const email = formData.get(EMAIL_IDENTIFIER)
+    const name = formData.get(FULL_NAME_IDENTIFIER)
+    const password = formData.get(PASSWORD_IDENTIFIER)
+    const passwordConfirmation = formData.get(PASSWORD_CONFIRMATION_IDENTIFIER)
+
     setIsLoading(true)
     setFeedback({ message: "", type: null })
-
-    const form = event.target
-    const email = getFormInputValueFromId(form, EMAIL_IDENTIFIER)
-    const name = getFormInputValueFromId(form, FULL_NAME_IDENTIFIER)
-    const password = getFormInputValueFromId(form, PASSWORD_IDENTIFIER)
-    const passwordConfirmation = getFormInputValueFromId(
-      form,
-      PASSWORD_CONFIRMATION_IDENTIFIER
-    )
-
     let errorMessageToUse = null
 
     // Validate input one more time
@@ -254,18 +251,17 @@ function ConfirmSignUpForm({
 
   async function handleConfirmSignUpFormSubmit(event) {
     event.preventDefault()
+
+    // Read data before disabling inputs with 'setIsLoading'
+    const formData = new FormData(event.target)
+
+    // Formdata is not used to get email because the field may be disabled (if
+    // the email to confirm was passed to the component and not entered by the user)
+    const email = emailInputRef.current.value
+    const confirmationCode = formData.get(CONFIRMATION_CODE_IDENTIFIER)
+
     setIsLoading(true)
     setFeedback({ message: "", type: null })
-
-    /** querySelector is used in case one or more inputs are disabled in which
-     * case, formdata won't work
-     */
-    const form = event.target
-    const email = getFormInputValueFromId(form, EMAIL_IDENTIFIER)
-    const confirmationCode = getFormInputValueFromId(
-      form,
-      CONFIRMATION_CODE_IDENTIFIER
-    )
 
     try {
       await Auth.confirmSignUp(email, confirmationCode, {
@@ -300,7 +296,6 @@ function ConfirmSignUpForm({
 
   async function handleCodeResendButtonClick(event) {
     event.preventDefault()
-    setFeedback({ message: "", type: null })
 
     /**
      * Verification needed since the button isn't a submit button, making the
@@ -309,11 +304,12 @@ function ConfirmSignUpForm({
      */
     const emailInput = emailInputRef.current
     if (!emailInput.validity.valid) {
-      emailInputRef.current.reportValidity()
+      emailInput.reportValidity()
       return
     }
 
     // Change button state
+    setFeedback({ message: "", type: null })
     setIsResendingCode(true)
 
     try {
