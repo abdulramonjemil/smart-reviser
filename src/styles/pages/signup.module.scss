@@ -1,6 +1,10 @@
 @use "sass:color";
 @use "../partials/utils";
 
+.Container {
+  padding: 20px 0 50px;
+}
+
 .EmailInputToConfirm {
   &:disabled {
     background-color: utils.get-color(light-blue);

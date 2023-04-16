@@ -391,7 +391,7 @@ export default function SignUp() {
   })
 
   return (
-    <div className={AuthStyles.AuthContainer}>
+    <div className={Styles.Container}>
       <BasicLayout pageTitle={`Sign Up | ${SITE_TITLE}`}>
         <AuthContainer
           title={signUpConfirmation.isActive ? "Confirm Sign Up" : "Sign Up"}

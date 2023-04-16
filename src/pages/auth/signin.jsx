@@ -15,11 +15,13 @@ import { HOME_PAGE_URL, SIGN_UP_PAGE_URL } from "../../constants/page-urls"
 
 import { scrollToPageTop } from "../../lib/navigation"
 
-import AuthStyles from "../../styles/includes/auth.module.scss"
 import {
   AccessPolicyTypes,
   useAccessPolicyManager
 } from "../../controllers/policy"
+
+import AuthStyles from "../../styles/includes/auth.module.scss"
+import Styles from "../../styles/pages/signin.module.scss"
 
 const INPUT_IDENTIFIERS = {
   EMAIL: "email",
@@ -123,7 +125,7 @@ export default function SignIn() {
   const [feedback, setFeedback] = useState({ message: "", type: null })
 
   return (
-    <div className={AuthStyles.AuthContainer}>
+    <div className={Styles.Container}>
       <BasicLayout pageTitle={`Sign In | ${SITE_TITLE}`}>
         <AuthContainer title="Sign In">
           <AuthFeedback {...feedback} />
