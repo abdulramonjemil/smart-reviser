@@ -11,10 +11,18 @@
     "start": "next start"
   },
   "dependencies": {
+    "@chakra-ui/next-js": "^2.1.2",
+    "@chakra-ui/react": "^2.5.5",
+    "@emotion/react": "^11.10.6",
+    "@emotion/styled": "^11.10.6",
     "aws-amplify": "^5.0.25",
+    "chakra-ui-steps": "^2.1.0",
+    "framer-motion": "^10.12.4",
     "next": "13.3.0",
+    "pdfjs-dist": "^3.5.141",
     "react": "18.2.0",
-    "react-dom": "18.2.0"
+    "react-dom": "18.2.0",
+    "react-icons": "^4.8.0"
   },
   "devDependencies": {
     "eslint": "^8.2.0",

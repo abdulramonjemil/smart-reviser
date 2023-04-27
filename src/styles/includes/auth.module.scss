@@ -1,7 +1,7 @@
 @use "../partials/utils";
 
 .AuthPrompt {
-  margin-top: 20px;
+  margin-top: utils.get-constant(top-margin);
   text-align: center;
 
   &__Link {

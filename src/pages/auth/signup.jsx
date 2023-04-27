@@ -1,6 +1,7 @@
 import { useRef, useState } from "react"
 import { Auth } from "aws-amplify"
 import { useRouter } from "next/router"
+import Link from "next/link"
 import {
   AuthContainer,
   AuthFeedback,
@@ -25,7 +26,7 @@ import { HOME_PAGE_URL, SIGN_IN_PAGE_URL } from "../../constants/page-urls"
 import { scrollToPageTop } from "../../lib/navigation"
 
 import AuthStyles from "../../styles/includes/auth.module.scss"
-import Styles from "../../styles/pages/signup.module.scss"
+import Styles from "../../styles/pages/auth/signup.module.scss"
 
 const INPUT_IDENTIFIERS = {
   FULL_NAME: "full-name",
@@ -436,9 +437,9 @@ export default function SignUp() {
 
           <p className={AuthStyles.AuthPrompt}>
             Already have an account?{" "}
-            <a className={AuthStyles.AuthPrompt__Link} href={SIGN_IN_PAGE_URL}>
-              Login
-            </a>{" "}
+            <Link href={SIGN_IN_PAGE_URL} legacyBehavior passHref>
+              <a className={AuthStyles.AuthPrompt__Link}>Login</a>
+            </Link>{" "}
             instead
           </p>
         </AuthContainer>

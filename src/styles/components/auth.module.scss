@@ -5,7 +5,7 @@ $input-container-padding: 12px;
 
 .AuthForm {
   &__OuterContainer {
-    margin-top: 20px;
+    margin-top: utils.get-constant(top-margin);
   }
 
   &__InnerContainer {
@@ -16,11 +16,11 @@ $input-container-padding: 12px;
   &__SiteLogo {
     display: flex;
     justify-content: center;
-    margin-top: 20px;
+    margin-top: utils.get-constant(top-margin);
 
     img {
       height: auto;
-      width: 80px;
+      width: 70px;
     }
   }
 
@@ -28,19 +28,10 @@ $input-container-padding: 12px;
     margin-top: 10px;
 
     h1 {
-      -webkit-background-clip: text;
-      background-clip: text;
-      background-image: linear-gradient(
-        to bottom right,
-        color.change(utils.get-color(tertiary), $lightness: 50%),
-        utils.get-color(tertiary)
-      );
-      color: transparent;
+      color: utils.get-color(primary);
       font-size: 2.2rem;
-      font-weight: 400;
+      font-weight: 700;
       text-align: center;
-      width: max-content;
-      margin: auto;
     }
   }
 
@@ -50,7 +41,7 @@ $input-container-padding: 12px;
     border-style: solid;
     font-size: 0.9rem;
     line-height: 1.2rem;
-    margin-top: 20px;
+    margin-top: utils.get-constant(top-margin);
     padding: 12px;
 
     &_error {
@@ -69,14 +60,14 @@ $input-container-padding: 12px;
     border: 1px solid utils.get-color(light-grey);
     border-radius: utils.get-constant(border-radius);
     box-shadow: 0 0 20px 0 rgb(0 0 0 / 10%);
-    margin-top: 20px;
+    margin-top: utils.get-constant(top-margin);
     padding: 0 $input-container-padding $input-container-padding;
   }
 }
 
 .TextInput {
   &__Container {
-    margin-top: 20px;
+    margin-top: utils.get-constant(top-margin);
   }
 
   &__Label {
@@ -118,7 +109,7 @@ $input-container-padding: 12px;
 }
 
 .SubmitButton {
-  margin-top: 20px;
+  margin-top: utils.get-constant(top-margin);
 
   $submit-button-color: utils.get-color(tertiary);
 

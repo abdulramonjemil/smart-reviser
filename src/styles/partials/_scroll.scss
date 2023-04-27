@@ -1,0 +1,30 @@
+@use "./utils";
+
+$scrollbar-thumb-color: utils.get-color(light-grey);
+$scrollbar-track-color: utils.get-color(dark);
+$scrollbar-width: 8px;
+
+@mixin scrollbar {
+  @media only screen and (min-width: 500px) {
+    scrollbar-color: $scrollbar-thumb-color $scrollbar-track-color;
+    scrollbar-width: thin;
+
+    &::-webkit-scrollbar {
+      height: $scrollbar-width;
+
+      width: $scrollbar-width;
+    }
+
+    &::-webkit-scrollbar-corner {
+      background-color: transparent;
+    }
+
+    &::-webkit-scrollbar-track {
+      background-color: $scrollbar-track-color;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background-color: $scrollbar-thumb-color;
+    }
+  }
+}

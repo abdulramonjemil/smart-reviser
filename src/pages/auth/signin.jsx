@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { useRouter } from "next/router"
 import { Auth } from "aws-amplify"
+import Link from "next/link"
 import { BasicLayout } from "../../components/layout"
 import {
   AuthContainer,
@@ -21,7 +22,7 @@ import {
 } from "../../controllers/policy"
 
 import AuthStyles from "../../styles/includes/auth.module.scss"
-import Styles from "../../styles/pages/signin.module.scss"
+import Styles from "../../styles/pages/auth/signin.module.scss"
 
 const INPUT_IDENTIFIERS = {
   EMAIL: "email",
@@ -77,6 +78,7 @@ function SignInForm({ isLoading, setFeedback, setIsLoading }) {
         router.push(HOME_PAGE_URL)
       }, 2000)
     } catch (error) {
+      accessPolicyManager.includeType(AccessPolicyTypes.USER_IS_GUEST)
       const errorName = error.name
       const knownMessageForError = MESSAGES_FOR_KNOWN_SIGN_IN_ERRORS[errorName]
 
@@ -137,9 +139,9 @@ export default function SignIn() {
 
           <p className={AuthStyles.AuthPrompt}>
             Don't have an account?{" "}
-            <a className={AuthStyles.AuthPrompt__Link} href={SIGN_UP_PAGE_URL}>
-              Sign up
-            </a>{" "}
+            <Link href={SIGN_UP_PAGE_URL} legacyBehavior passHref>
+              <a className={AuthStyles.AuthPrompt__Link}>Sign up</a>
+            </Link>{" "}
             instead
           </p>
         </AuthContainer>

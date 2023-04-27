@@ -1,5 +1,5 @@
 @use "sass:color";
-@use "../partials/utils";
+@use "../../partials/utils";
 
 .Container {
   padding: 20px 0 50px;
@@ -24,7 +24,7 @@
 }
 
 .ModeTogglerContainer {
-  margin-top: 20px;
+  margin-top: utils.get-constant(top-margin);
 
   button {
     background-color: utils.get-color(lighter-blue);
