@@ -50,13 +50,14 @@ export function NavItem({ children, href, icon, isActive = false }) {
 
 export function NavGroup({ heading, children }) {
   return (
-    <List display="flex" flexDir="column" gap="5px" mb="20px">
+    <List display="flex" flexDir="column" gap="5px" mb="30px">
       <Heading
         as="div"
         color="gray.300"
         fontFamily="fonts.body"
         fontSize=".85rem"
         fontWeight="500"
+        mb="-5px"
         padding="0 20px 10px"
         textTransform="uppercase"
       >
