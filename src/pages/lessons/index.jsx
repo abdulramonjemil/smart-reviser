@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { Link } from "@chakra-ui/next-js"
 import { GiEmptyWoodBucketHandle } from "react-icons/gi"
 
@@ -17,8 +17,11 @@ import {
   StackDivider,
   Tag,
   TagLabel,
-  Text
+  Text,
+  useToast
 } from "@chakra-ui/react"
+
+import { API } from "aws-amplify"
 
 import {
   AppLayout,
@@ -26,22 +29,28 @@ import {
   AppLayoutSidebar
 } from "../../components/layout"
 
-import { SideBar, TopLevelNavGroup } from "../../components/sidebar"
 import {
   ADD_NEW_LESSON_URL,
   ALL_LESSONS_URL,
+  LESSON_REVISION_URL,
   SIGN_IN_PAGE_URL
 } from "../../constants/page-urls"
+
+import { SideBar, TopLevelNavGroup } from "../../components/sidebar"
 import { SITE_TITLE } from "../../constants/site-details"
 import { ChakraUIProvider, Fonts } from "../../controllers/chakra-ui"
 import { AccessPolicyTypes } from "../../controllers/policy"
 
+import * as queries from "../../graphql/queries"
+
+const NUMBER_OF_LESSONS_TO_LOAD_EACH_TIME = 5
+
 function LessonCard({
   lesson = {
+    id: 0,
     title: "Some lesson title",
     description: "Some lesson description",
-    tags: ["a-tag", "another-tag", "another-one"],
-    revisionLink: "#"
+    tags: ["a-tag", "another-tag", "another-one"]
   }
 }) {
   return (
@@ -91,7 +100,7 @@ function LessonCard({
               bg="gray.100"
               borderRadius="6px"
               fontWeight="600"
-              href={lesson.revisionLink}
+              href={LESSON_REVISION_URL.for(lesson.id)}
               p="10px 20px"
               transition="background 0.2s linear"
               _hover={{ bg: "gray.200" }}
@@ -105,7 +114,6 @@ function LessonCard({
   )
 }
 
-// eslint-disable-next-line no-unused-vars
 function EmptyLessonsContent() {
   return (
     <Flex
@@ -136,8 +144,7 @@ function EmptyLessonsContent() {
   )
 }
 
-// eslint-disable-next-line no-unused-vars
-function LessonLoadingContent() {
+function LessonLoadingContent({ lessonLoadingErrorOccured }) {
   return (
     <Flex
       alignItems="center"
@@ -146,7 +153,11 @@ function LessonLoadingContent() {
       justifyContent="center"
       p="0 0 50px"
     >
-      <Spinner color="gray.700" size="xl" />
+      {lessonLoadingErrorOccured ? (
+        "Couldn't load lessons"
+      ) : (
+        <Spinner color="gray.700" size="xl" />
+      )}
     </Flex>
   )
 }
@@ -157,14 +168,149 @@ function LessonLoadingContent() {
  * that purpose
  */
 function LessonSet({ lessons = [] }) {
-  return lessons.map((lesson) => <LessonCard key={lesson.id} />)
+  return lessons.map((lesson) => <LessonCard lesson={lesson} key={lesson.id} />)
 }
 
 function AllLessonsView() {
-  // eslint-disable-next-line no-unused-vars
-  const [lessonsSets, setLessonsSets] = useState([
-    [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }]
-  ])
+  const [lessonsSets, setLessonsSets] = useState([])
+  const [lessonIsLoaded, setLessonIsLoaded] = useState(false)
+  const [isLoadingMoreLessons, setIsLoadingMoreLessons] = useState(false)
+  const [lessonLoadingNextToken, setLessonLoadingNextToken] = useState(null)
+  const [lessonLoadingErrorOccured, setLessonLoadingErrorOccured] =
+    useState(false)
+
+  const toast = useToast()
+
+  async function loadAppropriateLessonBatch(nextToken) {
+    let errorOccured = false
+    let lessonItems = null
+
+    try {
+      const lessonLoadingVariables = {
+        limit: NUMBER_OF_LESSONS_TO_LOAD_EACH_TIME
+      }
+
+      if (typeof nextToken === "string" && nextToken !== "") {
+        lessonLoadingVariables.nextToken = nextToken
+      }
+
+      const lessonsLoadingResult = await API.graphql({
+        query: queries.listLessons,
+        variables: lessonLoadingVariables
+      })
+
+      if (
+        typeof lessonsLoadingResult.errors === "object" &&
+        lessonsLoadingResult.errors !== null
+      ) {
+        throw lessonsLoadingResult
+      }
+
+      lessonItems = lessonsLoadingResult.data.listLessons.items
+      nextToken = lessonsLoadingResult.data.listLessons.nextToken
+    } catch (error) {
+      errorOccured = true
+    }
+
+    return {
+      errorOccured,
+      lessons: lessonItems,
+      nextToken
+    }
+  }
+
+  async function fetchLessonsTagsFromBackend(lessonIds) {
+    if (!Array.isArray(lessonIds)) throw new Error()
+    let errorOccured = false
+    let lessonsTagsLabels = null
+
+    try {
+      const tagsFetchingResult = await Promise.all(
+        lessonIds.map((lessonId) =>
+          API.graphql({
+            query: queries.getLesson,
+            variables: { id: lessonId }
+          })
+        )
+      )
+
+      if (
+        typeof tagsFetchingResult.errors === "object" &&
+        tagsFetchingResult.errors !== null
+      ) {
+        throw tagsFetchingResult
+      }
+
+      lessonsTagsLabels = tagsFetchingResult.map((result) =>
+        result.data.getLesson.tags.items.map((tagObject) => tagObject.tagLabel)
+      )
+    } catch (error) {
+      errorOccured = true
+    }
+
+    return { errorOccured, lessonsTagsLabels }
+  }
+
+  const notifyUserOfLessonLoadingError = useCallback(() => {
+    toast({
+      title: "Failed to create lesson",
+      description: "An error occured while creating the lesson",
+      status: "error",
+      duration: 5000,
+      isClosable: true
+    })
+  }, [toast])
+
+  const attemptLessonLoad = useCallback(
+    async (nextToken) => {
+      const lessonsLoadingResult = await loadAppropriateLessonBatch(nextToken)
+      if (lessonsLoadingResult.errorOccured) {
+        setLessonLoadingErrorOccured(true)
+        notifyUserOfLessonLoadingError()
+        return { errorOccured: true, loadedLessons: null }
+      }
+
+      setLessonLoadingNextToken(lessonsLoadingResult.nextToken || null)
+      const loadedLessons = lessonsLoadingResult.lessons
+
+      const lessonsTagsLabelsLoadingResult = await fetchLessonsTagsFromBackend(
+        loadedLessons.map((lesson) => lesson.id)
+      )
+
+      if (lessonsTagsLabelsLoadingResult.errorOccured) {
+        setLessonLoadingErrorOccured(true)
+        notifyUserOfLessonLoadingError()
+        return { errorOccured: true, loadedLessons: null }
+      }
+
+      loadedLessons.forEach((lesson, index) => {
+        lesson.tags = lessonsTagsLabelsLoadingResult.lessonsTagsLabels[index]
+      })
+
+      return { errorOccured: false, loadedLessons }
+    },
+    [notifyUserOfLessonLoadingError]
+  )
+
+  async function loadMoreLessons() {
+    setIsLoadingMoreLessons(true)
+    const loadedLessonResult = await attemptLessonLoad(lessonLoadingNextToken)
+    if (loadedLessonResult.errorOccured) return
+
+    setLessonsSets([...lessonsSets, loadedLessonResult.loadedLessons])
+    setIsLoadingMoreLessons(false)
+  }
+
+  useEffect(() => {
+    if (lessonIsLoaded) return
+    ;(async () => {
+      const loadedLessonResult = await attemptLessonLoad()
+      if (loadedLessonResult.errorOccured) return
+
+      setLessonsSets([loadedLessonResult.loadedLessons])
+      setLessonIsLoaded(true)
+    })()
+  }, [lessonIsLoaded, attemptLessonLoad])
 
   return (
     <Flex flexDir="column" minH="100vh" pb="20px">
@@ -172,18 +318,43 @@ function AllLessonsView() {
         Lessons
       </Heading>
 
-      <Box mt="20px" p="0 20px">
-        <SimpleGrid columns={2} spacing="20px">
-          {lessonsSets.map((lessonSet, index) => (
-            // eslint-disable-next-line react/no-array-index-key
-            <LessonSet lessons={lessonSet} key={index} />
-          ))}
-        </SimpleGrid>
+      {/* eslint-disable-next-line no-nested-ternary */}
+      {lessonIsLoaded ? (
+        // Show empty lesson content if first lessons batch is empty (user has no
+        // lessons created)
+        lessonsSets[0].length > 0 ? (
+          <Box mt="20px" p="0 20px">
+            <SimpleGrid columns={2} spacing="20px">
+              {lessonsSets.map((lessonSet, index) => (
+                // eslint-disable-next-line react/no-array-index-key
+                <LessonSet lessons={lessonSet} key={index} />
+              ))}
+            </SimpleGrid>
 
-        <Flex justifyContent="center" mt="20px">
-          <Button>Load more</Button>
-        </Flex>
-      </Box>
+            {typeof lessonLoadingNextToken === "string" &&
+            lessonLoadingNextToken !== "" ? (
+              <Flex justifyContent="center" mt="40px">
+                <Button
+                  isLoading={isLoadingMoreLessons}
+                  onClick={loadMoreLessons}
+                >
+                  Load more
+                </Button>
+              </Flex>
+            ) : (
+              <Text color="gray.400" mt="40px" textAlign="center">
+                You have reached the end 🍿
+              </Text>
+            )}
+          </Box>
+        ) : (
+          <EmptyLessonsContent />
+        )
+      ) : (
+        <LessonLoadingContent
+          lessonLoadingErrorOccured={lessonLoadingErrorOccured}
+        />
+      )}
     </Flex>
   )
 }
@@ -211,8 +382,3 @@ AllLessons.accessPolicies = [
     alternateSource: SIGN_IN_PAGE_URL
   }
 ]
-
-// Lines that have eslint-ignore that should be removed later
-// - Definition of EmptyLessonsContent
-// - Definition of LessonLoadingContent
-// - The state setter 'setLessonsSets' in AllLessonsView components
