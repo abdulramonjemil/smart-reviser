@@ -1,0 +1,19 @@
+# This "input" configures a global authorization rule to enable public access to
+# all models in this schema. Learn more about authorization rules here: https://docs.amplify.aws/cli/graphql/authorization-rules
+
+# This "input" configures a global authorization rule to enable public access to
+# all models in this schema. Learn more about authorization rules here: https://docs.amplify.aws/cli/graphql/authorization-rules
+
+type Lesson @model @auth(rules: [{ allow: owner }]) {
+  id: ID!
+  title: String!
+  description: String!
+  content: String!
+  owner: String @auth(rules: [{ allow: owner, operations: [read, delete] }])
+  tags: [Tag!]! @manyToMany(relationName: "LessonTags")
+}
+
+type Tag @model @auth(rules: [{ allow: private }]) {
+  label: String! @primaryKey @auth(rules: [{ allow: private, operations: [create, read] }])
+  lessons: [Lesson!]! @manyToMany(relationName: "LessonTags") @auth(rules: [{ allow: owner }])
+}

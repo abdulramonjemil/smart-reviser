@@ -1,5 +1,5 @@
 import { Auth, Hub } from "aws-amplify"
-import { createContext, useEffect, useContext, useState } from "react"
+import { createContext, useEffect, useContext, useState, useRef } from "react"
 
 export const AuthContext = createContext({
   userIsAuthenticated: false,
@@ -7,6 +7,14 @@ export const AuthContext = createContext({
 })
 
 export const useAuth = () => useContext(AuthContext)
+
+export function useLastAuth() {
+  const auth = useAuth()
+  const authRef = useRef(auth)
+
+  authRef.current = auth.userIsAuthenticated ? auth : authRef.current
+  return authRef.current
+}
 
 export function AuthProvider({ children, placeholder }) {
   const [isCheckingForUser, setIsCheckingForUser] = useState(true)

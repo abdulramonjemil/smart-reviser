@@ -9,39 +9,56 @@ import {
   List,
   ListIcon,
   ListItem,
+  useToast,
   VStack
 } from "@chakra-ui/react"
+
+import { Auth } from "aws-amplify"
+import { useRouter } from "next/router"
 
 import { AiOutlineUser } from "react-icons/ai"
 import { BsCollection } from "react-icons/bs"
 import { CgAddR } from "react-icons/cg"
 import { FiLogOut } from "react-icons/fi"
 
-import { ADD_NEW_LESSON_URL, ALL_LESSONS_URL } from "../constants/page-urls"
+import {
+  ADD_NEW_LESSON_URL,
+  ALL_LESSONS_URL,
+  SIGN_IN_PAGE_URL
+} from "../constants/page-urls"
 import { SITE_TITLE } from "../constants/site-details"
-import { useAuth } from "../controllers/auth"
+import { useLastAuth } from "../controllers/auth"
+import {
+  AccessPolicyTypes,
+  useAccessPolicyManager
+} from "../controllers/policy"
 
-export function NavItem({ children, href, icon, isActive = false }) {
-  const itemColor = isActive ? "white" : "gray.300"
-  const itemFontWeight = isActive ? "700" : "400"
-
+export function NavItem({ children, href, icon, isActive = false, onClick }) {
   return (
     <ListItem>
       <Link
         alignItems="center"
         borderRadius="4px"
-        color={itemColor}
+        color="gray.300"
         display="flex"
         fontSize=".9rem"
-        fontWeight={itemFontWeight}
+        fontWeight={isActive ? "700" : "400"}
         href={href}
         m="0 10px"
+        onClick={onClick}
         p="8px"
         textDecor="none"
         _focus={{ bg: "blackAlpha.400" }}
         _hover={{ bg: "blackAlpha.400" }}
       >
-        <ListIcon as={icon} color={itemColor} fontSize="1.2rem" />
+        <ListIcon
+          as={icon}
+          bg={isActive ? "gray.300" : "transparent"}
+          borderRadius="4px"
+          color={isActive ? "brand.primary" : "gray.300"}
+          fontSize="1.5rem"
+          p="3px"
+        />
         {children}
       </Link>
     </ListItem>
@@ -90,7 +107,46 @@ export function TopLevelNavGroup({ activeURL = "" }) {
 }
 
 export function SideBar({ children }) {
-  const { user } = useAuth()
+  const { user: lastAuthUser } = useLastAuth()
+  const router = useRouter()
+  const toast = useToast()
+
+  const accessPolicyManager = useAccessPolicyManager()
+
+  async function handleSignOutButtonClick(event) {
+    event.preventDefault()
+    accessPolicyManager.ignoreType(AccessPolicyTypes.USER_IS_AUTHENTICATED)
+
+    const signOutToastIdRef = toast({
+      title: "Attempting sign out",
+      description: "You will be signed out shortly",
+      status: "info",
+      duration: null,
+      isClosable: false
+    })
+
+    try {
+      await Auth.signOut()
+      toast.update(signOutToastIdRef, {
+        title: "Signed out successfully",
+        description: "Redirecting to sign in page",
+        status: "success"
+      })
+
+      setTimeout(() => {
+        router.push(SIGN_IN_PAGE_URL)
+      }, 2000)
+    } catch (error) {
+      accessPolicyManager.includeType(AccessPolicyTypes.USER_IS_AUTHENTICATED)
+      toast.update(signOutToastIdRef, {
+        title: "Error signing out",
+        description: "Could not sign out successfully",
+        status: "error",
+        duration: 10000,
+        isClosable: true
+      })
+    }
+  }
 
   return (
     <Flex
@@ -144,7 +200,7 @@ export function SideBar({ children }) {
               m="0"
             />
             <Box color="gray.300" p="0 0 10px">
-              {user.attributes.name}
+              {lastAuthUser.attributes.name}
             </Box>
           </VStack>
 
@@ -156,6 +212,7 @@ export function SideBar({ children }) {
             fontSize=".9rem"
             href="#"
             m="0 10px"
+            onClick={handleSignOutButtonClick}
             p="8px"
             textDecor="none"
             _focus={{ bg: "blackAlpha.400" }}

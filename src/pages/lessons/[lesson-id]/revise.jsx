@@ -1,4 +1,19 @@
-import { Box, Button, Heading, Text, Textarea } from "@chakra-ui/react"
+import {
+  Box,
+  Button,
+  FormControl,
+  FormHelperText,
+  FormLabel,
+  Heading,
+  NumberDecrementStepper,
+  NumberIncrementStepper,
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
+  Text,
+  Textarea
+} from "@chakra-ui/react"
+
 import Head from "next/head"
 import { useRouter } from "next/router"
 import Script from "next/script"
@@ -17,6 +32,7 @@ import {
   SideBar,
   TopLevelNavGroup
 } from "../../../components/sidebar"
+
 import {
   LESSON_REVISION_URL,
   SIGN_IN_PAGE_URL
@@ -24,6 +40,7 @@ import {
 import { SITE_TITLE } from "../../../constants/site-details"
 import { ChakraUIProvider, Fonts } from "../../../controllers/chakra-ui"
 import { AccessPolicyTypes } from "../../../controllers/policy"
+import { uniqueId } from "../../../lib/markup"
 import { SAMPLE_QUIZ_OBJECT } from "../../../samples/quiz"
 
 function QuizJSUtils() {
@@ -133,6 +150,8 @@ function LessonRevisionSection() {
     quizIsStarted: false,
     quizIsLoaded: false
   })
+
+  const maxQuestionsInputId = uniqueId("max-questions-count-input")
   const { quizIsStarted, quizIsLoaded } = quizState
 
   function startLessonQuiz() {
@@ -142,6 +161,31 @@ function LessonRevisionSection() {
   return (
     <Box p="20px">
       <LessonDetails hideLessonContent={quizIsStarted} />
+
+      <FormControl isDisabled={quizIsStarted} isRequired maxW="600px" mb="20px">
+        <FormLabel htmlFor={maxQuestionsInputId}>
+          Max Questions To Generate
+        </FormLabel>
+        <NumberInput
+          defaultValue={20}
+          id={maxQuestionsInputId}
+          min={3}
+          max={20}
+          step={1}
+        >
+          <NumberInputField />
+          <NumberInputStepper>
+            <NumberIncrementStepper />
+            <NumberDecrementStepper />
+          </NumberInputStepper>
+        </NumberInput>
+        <FormHelperText>
+          The maximum number of questions to generate for revision. Must be
+          between 3 and 20. Value will be clamped accordingly after input if
+          needed.
+        </FormHelperText>
+      </FormControl>
+
       <Button
         isDisabled={quizIsStarted}
         isLoading={quizIsStarted && !quizIsLoaded}
@@ -208,3 +252,6 @@ ReviseSpecificLesson.accessPolicies = [
     alternateSource: SIGN_IN_PAGE_URL
   }
 ]
+
+// Things to do later
+// - Export a getServerSidePropsMethod() method to send 404 page if needed

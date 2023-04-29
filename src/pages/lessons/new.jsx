@@ -32,9 +32,11 @@ import {
   VStack
 } from "@chakra-ui/react"
 
+import { API } from "aws-amplify"
 import { Step, Steps, useSteps } from "chakra-ui-steps"
 import { createContext, useContext, useEffect, useRef, useState } from "react"
 
+import { useRouter } from "next/router"
 import { PDFJS } from "../../lib/pdf"
 import {
   AppLayout,
@@ -43,12 +45,19 @@ import {
 } from "../../components/layout"
 import { TopLevelNavGroup, SideBar } from "../../components/sidebar"
 
-import { ADD_NEW_LESSON_URL, SIGN_IN_PAGE_URL } from "../../constants/page-urls"
+import {
+  ADD_NEW_LESSON_URL,
+  LESSON_REVISION_URL,
+  SIGN_IN_PAGE_URL
+} from "../../constants/page-urls"
 import { SITE_TITLE } from "../../constants/site-details"
 import { ChakraUIProvider } from "../../controllers/chakra-ui"
 import { AccessPolicyTypes } from "../../controllers/policy"
 import { uniqueId } from "../../lib/markup"
 import { countWords } from "../../lib/counter"
+
+import * as queries from "../../graphql/queries"
+import * as mutations from "../../graphql/mutations"
 
 const DEFAULT_NEW_LESSON_DATA = {
   title: "",
@@ -60,8 +69,8 @@ const DEFAULT_NEW_LESSON_DATA = {
 const NewLessonDataContext = createContext(DEFAULT_NEW_LESSON_DATA)
 
 const MAX_ACCEPTABLE_PDF_FILE_SIZE = 5 * 1e6 // (in bytes)
-const MAX_LESSON_CONTENT_CHAR_COUNT = 15000
-const MAX_LESSON_CONTENT_WORD_COUNT = 3000
+const MAX_LESSON_CONTENT_CHAR_COUNT = 20000
+const MAX_LESSON_CONTENT_WORD_COUNT = 4000
 const MIN_LESSON_CONTENT_WORD_COUNT = 150
 const MIN_TAG_LABEL_CHAR_COUNT = 2
 const MAX_TAG_LABEL_CHAR_COUNT = 20
@@ -501,8 +510,8 @@ function LessonSource({ setLevelIsCompleted }) {
             {lessonContent === "" || lessonContentIsValid ? (
               <FormHelperText>
                 Lesson content cannot be more than{" "}
-                {MAX_LESSON_CONTENT_CHAR_COUNT}, must be at least{" "}
-                {MIN_LESSON_CONTENT_WORD_COUNT} words long, and at most,{" "}
+                {MAX_LESSON_CONTENT_CHAR_COUNT} characters long, must be at
+                least {MIN_LESSON_CONTENT_WORD_COUNT} words long, and at most,{" "}
                 {MAX_LESSON_CONTENT_WORD_COUNT} words long
                 <br />
                 For best results, make sure to break paragraphs as often as
@@ -512,8 +521,8 @@ function LessonSource({ setLevelIsCompleted }) {
             ) : (
               <FormErrorMessage>
                 Lesson content cannot be more than{" "}
-                {MAX_LESSON_CONTENT_CHAR_COUNT}, must be at least{" "}
-                {MIN_LESSON_CONTENT_WORD_COUNT} words long, and at most,{" "}
+                {MAX_LESSON_CONTENT_CHAR_COUNT} characters long, must be at
+                least {MIN_LESSON_CONTENT_WORD_COUNT} words long, and at most,{" "}
                 {MAX_LESSON_CONTENT_WORD_COUNT} words long
               </FormErrorMessage>
             )}
@@ -661,8 +670,12 @@ function LessonAdditionalData({ setLevelIsCompleted }) {
 function LessonCreationSection() {
   const [metadataIsSet, setMetaDataIsSet] = useState(false)
   const [lessonSourceIsSet, setLessonSourceIsSet] = useState(false)
+  const [isCreatingLesson, setIsCreatingLesson] = useState(false)
   const [tagsAreSet, setTagsAreSet] = useState(false)
 
+  const router = useRouter()
+  const toast = useToast()
+  const newLessonData = useContext(NewLessonDataContext)
   const { activeStep, nextStep, prevStep } = useSteps({
     initialStep: 0
   })
@@ -670,13 +683,251 @@ function LessonCreationSection() {
   const indexOfHighestStep = 2
   const stepsCompletionData = [metadataIsSet, lessonSourceIsSet, tagsAreSet]
 
+  async function createLessonInBackend(lessonData) {
+    let lessonId = null
+    let errorOccured = false
+
+    try {
+      const lessonCreationResult = await API.graphql({
+        query: mutations.createLesson,
+        variables: { input: lessonData }
+      })
+
+      if (
+        typeof lessonCreationResult.errors === "object" &&
+        lessonCreationResult.errors !== null
+      ) {
+        throw lessonCreationResult
+      }
+
+      lessonId = lessonCreationResult.data.createLesson.id
+    } catch (error) {
+      errorOccured = true
+    }
+
+    return { lessonId, errorOccured }
+  }
+
+  function notifyUserOfLessonCreationError(lessonCreationToastId) {
+    toast.update(lessonCreationToastId, {
+      title: "Failed to create lesson",
+      description: "An error occured while creating the lesson",
+      status: "error",
+      isClosable: true
+    })
+  }
+
+  async function getUncreatedTags(tagLabels) {
+    if (!Array.isArray(tagLabels)) throw new Error()
+
+    let errorOccured = false
+    let uncreatedTags = null
+
+    try {
+      const tagsFetchingResult = await Promise.all(
+        tagLabels.map((tagLabel) =>
+          API.graphql({
+            query: queries.getTag,
+            variables: { label: tagLabel }
+          })
+        )
+      )
+
+      const someResultContainErrors = tagsFetchingResult.some(
+        (result) => typeof result.errors === "object" && result.errors !== null
+      )
+      if (someResultContainErrors) throw new Error()
+
+      uncreatedTags = tagLabels.filter((tagLabel, index) => {
+        const resultForLabel = tagsFetchingResult[index]
+        return (
+          typeof resultForLabel.data.getTag !== "object" ||
+          resultForLabel.data.getTag === null
+        )
+      })
+
+      if (uncreatedTags.length === 0) uncreatedTags = null
+    } catch (error) {
+      errorOccured = true
+    }
+
+    return { uncreatedTags, errorOccured }
+  }
+
+  async function createTagsInBackend(tagLabels) {
+    if (!Array.isArray(tagLabels)) throw new Error()
+    let errorOccured = false
+
+    /**
+     * When experimenting with this, it is noticed that amplify causes AppSync
+     * to error by returning `null` for the `lessons` field on
+     * `result.data.createTag`. This is most likely an issue with amplify
+     * codegen, and there's nothing that can be done from my end (as far as I
+     * know). Feel free to reach out if you know of the reason for the error.
+     * The exact error message starts with "Cannot return null for non-nullable
+     * type" which is what I'm going to be using here. Also, Promise.allSettled
+     * is used to make sure that all of the requests results are completed.
+     *
+     * So, instead of just checking the `errors` field of the result to
+     * determine if there's an error, I'll not consider the error if
+     * the `data` field's `createTag` field if it's not null, the `lessons`
+     * field on that is null, and there's just one error, and the message starts
+     * with "Cannot return null for non-nullable type".
+     */
+    try {
+      const tagCreationSettledResults = await Promise.allSettled(
+        tagLabels.map((tagLabel) =>
+          API.graphql({
+            query: mutations.createTag,
+            variables: { input: { label: tagLabel } }
+          })
+        )
+      )
+
+      const someResultContainErrors = tagCreationSettledResults.some(
+        (settledResult) => {
+          const result = settledResult.reason
+          const resultData = result.data
+          const resultErrors = result.errors
+
+          const isExpectedError =
+            settledResult.status === "rejected" &&
+            typeof resultData === "object" &&
+            resultData !== null &&
+            resultData.createTag.lessons === null &&
+            Array.isArray(resultErrors) &&
+            resultErrors.length === 1 &&
+            resultErrors[0].message?.startsWith(
+              "Cannot return null for non-nullable type"
+            )
+
+          return (
+            typeof resultErrors === "object" &&
+            resultErrors !== null &&
+            !isExpectedError
+          )
+        }
+      )
+
+      if (someResultContainErrors) throw tagCreationSettledResults
+    } catch (error) {
+      errorOccured = true
+    }
+
+    return { errorOccured }
+  }
+
+  async function createLessonTagsInBackend(lessonId, tagLabels) {
+    if (!Array.isArray(tagLabels)) throw new Error()
+    let errorOccured = false
+
+    try {
+      const lessonTagsCreationResult = await Promise.all(
+        tagLabels.map((tagLabel) =>
+          API.graphql({
+            query: mutations.createLessonTags,
+            variables: { input: { lessonId, tagLabel } }
+          })
+        )
+      )
+
+      const someResultContainErrors = lessonTagsCreationResult.some(
+        (result) => typeof result.errors === "object" && result.errors !== null
+      )
+
+      if (someResultContainErrors) throw lessonTagsCreationResult
+    } catch (error) {
+      errorOccured = true
+    }
+
+    return { errorOccured }
+  }
+
+  async function createLessonWithProvidedData() {
+    setIsCreatingLesson(true)
+
+    const lessonCreationToastId = toast({
+      title: "Attempting to create lesson",
+      description: "Your request is being processed",
+      status: "info",
+      duration: null,
+      position: "top",
+      isClosable: true
+    })
+
+    const {
+      title: lessonTitle,
+      description: lessonDescription,
+      content: lessonContent,
+      tags: lessonTags
+    } = newLessonData
+
+    const lessonCreationResult = await createLessonInBackend({
+      title: lessonTitle,
+      description: lessonDescription,
+      content: lessonContent
+    })
+
+    if (lessonCreationResult.errorOccured) {
+      notifyUserOfLessonCreationError(lessonCreationToastId)
+      setIsCreatingLesson(false)
+      return
+    }
+
+    // Convert lesson tags to lower case
+    const validTagLabels = lessonTags.map((lessonTag) =>
+      String.prototype.toLowerCase.call(lessonTag)
+    )
+
+    const uncreatedTagsRetrievalResult = await getUncreatedTags(validTagLabels)
+    if (uncreatedTagsRetrievalResult.errorOccured) {
+      notifyUserOfLessonCreationError(lessonCreationToastId)
+      setIsCreatingLesson(false)
+      return
+    }
+
+    const { uncreatedTags } = uncreatedTagsRetrievalResult
+    if (Array.isArray(uncreatedTags)) {
+      const tagsCreationResult = await createTagsInBackend(uncreatedTags)
+      if (tagsCreationResult.errorOccured) {
+        notifyUserOfLessonCreationError(lessonCreationToastId)
+        setIsCreatingLesson(false)
+        return
+      }
+    }
+
+    const lessonTagsCreationResult = await createLessonTagsInBackend(
+      lessonCreationResult.lessonId,
+      validTagLabels
+    )
+    if (lessonTagsCreationResult.errorOccured) {
+      notifyUserOfLessonCreationError(lessonCreationToastId)
+      setIsCreatingLesson(false)
+      return
+    }
+
+    // At this point all actions have been completed, and the user can be
+    // redirected to the revision page
+    toast.update(lessonCreationToastId, {
+      title: "Lesson created successfully",
+      description: "Redirecting to lesson revision page",
+      status: "success",
+      isClosable: true
+    })
+
+    setTimeout(
+      () => router.push(LESSON_REVISION_URL.for(lessonCreationResult.lessonId)),
+      1500
+    )
+  }
+
   return (
     <Box>
       <Heading as="h1" p="20px">
         Create New Lesson
       </Heading>
 
-      <Box mb="20px" p="0 20px">
+      <Box maxW="600px" mb="20px" p="0 20px">
         <Steps activeStep={activeStep} colorScheme="purple" variant="circles">
           <Step label="Provide Metadata">
             <LessonMetadata setLevelIsCompleted={setMetaDataIsSet} />
@@ -721,7 +972,9 @@ function LessonCreationSection() {
               (stepCompletion) => stepCompletion === false
             )
           }
+          isLoading={isCreatingLesson}
           mb="20px"
+          onClick={createLessonWithProvidedData}
         >
           Create Lesson
         </Button>
