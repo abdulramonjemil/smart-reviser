@@ -12,8 +12,8 @@ import awsExports from "../aws-exports"
 import "../styles/globals.scss"
 import Styles from "../styles/pages/_app.module.scss"
 
-// Configure amplify
-Amplify.configure(awsExports)
+// Configure amplify (ssr is enabled for api routes)
+Amplify.configure({ ...awsExports, ssr: true })
 
 function WhitePage() {
   return <div className={Styles.WhitePage} />

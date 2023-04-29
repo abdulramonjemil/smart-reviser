@@ -1,0 +1,47 @@
+CREATE MODEL lesson_quiz_generator
+PREDICT lesson_quiz
+USING
+engine = 'openai',
+max_tokens = 2048,
+temperature = 1,
+prompt_template = '
+The following text (everything starting from "LESSON_CONTENT" till the end) is
+the content of the lesson discussed by a teacher in a class. The teacher wants
+to give the students an assignment based on the text, generate
+{{questions_count}} or less questions (should be less only if needed, but there
+must be at least one question) in JSON adhering strictly to the format:
+
+{
+  "quizDetails": [
+    {
+      "question": "the question to be posed to the student",
+      "options": {
+        "A": "the first option the student can choose",
+        "B": "the second option the student can choose",
+        "C": "the third option the student can choose",
+        "D": "the fourth option the student can choose"
+      },
+      "answer": "the letter of the correct one of the four options. Must be one of A, B, C, D",
+      "explanation": "a brief explanation of why the option in the `answer` property is the valid answer to the question"
+    }
+  ]
+}
+
+The result you give must always abide by this format, i.e the returned value
+must be valid JSON, where the top-level object has a `quizDetails` property
+that is always an array, where each element of the array is an object with a
+`question` property, an `options` property, and an `answer` property. No
+additional content should ever be returned. The values of each key in the
+`options` property must make complete sense on their own (verify it on your
+own). The value of the `answer` property must be one of "A", "B", "C", or "D".
+Each option must be as short as possible, Never more than 20 words. The
+`explanation` property should also be as short as possible but can be up to 60
+words long. If an explanation is not needed, the `explanation` should be set to
+`null`. Verify all answers and explanations and make sure they are correct. The
+value of `question` and properties of `options` must never contain line breaks.
+The value of `explanation` on the other hand can contain line breaks (if
+needed). Lastly, make sure to make the answer options as random as possible.
+
+LESSON_CONTENT
+{{lesson_content}}
+';

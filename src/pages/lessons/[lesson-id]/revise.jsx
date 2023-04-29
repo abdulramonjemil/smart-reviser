@@ -1,6 +1,7 @@
 import {
   Box,
   Button,
+  Flex,
   FormControl,
   FormHelperText,
   FormLabel,
@@ -10,12 +11,14 @@ import {
   NumberInput,
   NumberInputField,
   NumberInputStepper,
+  Spinner,
   Text,
-  Textarea
+  Textarea,
+  useToast
 } from "@chakra-ui/react"
+import Error from "next/error"
 
 import Head from "next/head"
-import { useRouter } from "next/router"
 import Script from "next/script"
 import { useEffect, useRef, useState } from "react"
 import { BiBookReader } from "react-icons/bi"
@@ -35,13 +38,23 @@ import {
 
 import {
   LESSON_REVISION_URL,
+  QUIZ_GENERATION_URL,
   SIGN_IN_PAGE_URL
 } from "../../../constants/page-urls"
 import { SITE_TITLE } from "../../../constants/site-details"
 import { ChakraUIProvider, Fonts } from "../../../controllers/chakra-ui"
+import {
+  LessonContext,
+  useLesson,
+  useLessonManager
+} from "../../../controllers/lesson"
 import { AccessPolicyTypes } from "../../../controllers/policy"
 import { uniqueId } from "../../../lib/markup"
-import { SAMPLE_QUIZ_OBJECT } from "../../../samples/quiz"
+
+import {
+  GENERATION_LIMITS,
+  QUIZ_GENERATION_PARAMS
+} from "../../../lib/quiz-generation"
 
 function QuizJSUtils() {
   return (
@@ -59,12 +72,10 @@ function QuizJSUtils() {
 }
 
 function LessonDetails({ hideLessonContent }) {
+  const lesson = useLesson()
+
   return (
     <Box maxW="600px">
-      <Heading as="h1" mb="20px">
-        Revise Lesson
-      </Heading>
-
       <Box mb="20px">
         <Heading
           as="h2"
@@ -74,7 +85,7 @@ function LessonDetails({ hideLessonContent }) {
         >
           Title
         </Heading>
-        <Text>The awesome title of the lesson</Text>
+        <Text>{lesson.title}</Text>
       </Box>
 
       <Box mb="20px">
@@ -86,11 +97,7 @@ function LessonDetails({ hideLessonContent }) {
         >
           Description
         </Heading>
-        <Text>
-          The awesome description of the lesson. The awesome description of the
-          lesson. The awesome description of the lesson. The awesome description
-          of the lesson.
-        </Text>
+        <Text>{lesson.description}</Text>
       </Box>
 
       {!hideLessonContent && (
@@ -108,7 +115,7 @@ function LessonDetails({ hideLessonContent }) {
             isDisabled
             mt="10px"
             _disabled={{ opacity: "1" }}
-            value="The awesome description of the lesson. The awesome description of the lesson. The awesome description of the lesson. The awesome description of the lesson."
+            value={lesson.content}
           />
         </Box>
       )}
@@ -116,109 +123,235 @@ function LessonDetails({ hideLessonContent }) {
   )
 }
 
-function LessonQuiz({ quizState, setQuizState }) {
+function LessonQuiz({ maxQuestionsCount, quizState, setQuizState }) {
   const quizContainerRef = useRef()
   const [createdQuizElement, setCreatedQuizElement] = useState(null)
+  const lesson = useLesson()
+  const toast = useToast()
 
   useEffect(() => {
     if (createdQuizElement !== null) return
+    ;(async () => {
+      const lessonQuizGenerationURL = new URL(
+        QUIZ_GENERATION_URL,
+        window.location.origin
+      )
+      lessonQuizGenerationURL.searchParams.set(
+        QUIZ_GENERATION_PARAMS.LESSON_ID,
+        lesson.id
+      )
 
-    const { Quiz } = window
-    const [newlyCreatedQuizElement] = Quiz.create(
-      Quiz.Props.define(SAMPLE_QUIZ_OBJECT),
-      quizContainerRef.current
-    )
+      lessonQuizGenerationURL.searchParams.set(
+        QUIZ_GENERATION_PARAMS.MAX_QUESTIONS_COUNT,
+        maxQuestionsCount
+      )
 
-    setCreatedQuizElement(newlyCreatedQuizElement)
-    setQuizState({ ...quizState, quizIsLoaded: true })
-  }, [createdQuizElement, quizState, setQuizState])
+      toast({
+        title: "Attempting to create quiz",
+        status: "info",
+        duration: 6000,
+        isClosable: true
+      })
+
+      let quizDetailsObject = null
+      let errorOccured = false
+
+      try {
+        const lessonQuizGenerationResult = await fetch(
+          lessonQuizGenerationURL,
+          {
+            method: "GET",
+            mode: "same-origin"
+          }
+        )
+
+        if (lessonQuizGenerationResult.status !== 200)
+          throw lessonQuizGenerationResult
+
+        quizDetailsObject = await lessonQuizGenerationResult.json()
+      } catch (error) {
+        errorOccured = true
+      }
+
+      if (errorOccured) {
+        toast({
+          title: "An error occured",
+          description: "Could not generate quiz. Please try again.",
+          status: "error",
+          duration: 6000,
+          isClosable: true
+        })
+
+        setQuizState({ ...quizState, quizIsStarted: false })
+        return
+      }
+
+      const quizOptions = {
+        metadata: {
+          header: "Revise Lesson",
+          autoSave: false
+        },
+        elements: []
+      }
+
+      quizDetailsObject.quizDetails.forEach((quizDetail) => {
+        quizOptions.elements.push({
+          type: "QUESTION",
+          props: {
+            title: quizDetail.question,
+            answer: quizDetail.answer,
+            options: Object.values(quizDetail.options),
+            // undefined is required by Quiz.Props
+            feedBackContent: quizDetail.explanation || undefined
+          }
+        })
+      })
+
+      const { Quiz } = window
+      const [newlyCreatedQuizElement] = Quiz.create(
+        Quiz.Props.define(quizOptions),
+        quizContainerRef.current
+      )
+
+      setCreatedQuizElement(newlyCreatedQuizElement)
+      setQuizState({ ...quizState, quizIsLoaded: true })
+    })()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
-    <Box
-      borderColor="gray.200"
-      borderStyle="solid"
-      borderWidth="1px 0 0"
-      ref={quizContainerRef}
-      mt="20px"
-      pt="20px"
-    />
+    <Box>
+      <QuizJSUtils />
+      <Box
+        borderColor="gray.200"
+        borderStyle="solid"
+        borderWidth="1px 0 0"
+        ref={quizContainerRef}
+        mt="20px"
+        p="20px 0"
+      />
+    </Box>
   )
 }
 
-function LessonRevisionSection() {
+function LessonRevisionSection({ lessonManager }) {
   const [quizState, setQuizState] = useState({
     quizIsStarted: false,
     quizIsLoaded: false
   })
 
+  const toast = useToast()
+  const [maxQuestionsCount, setMaxQuestionsCount] = useState(
+    GENERATION_LIMITS.MAX_MAX_QUESTIONS_COUNT
+  )
+
   const maxQuestionsInputId = uniqueId("max-questions-count-input")
   const { quizIsStarted, quizIsLoaded } = quizState
 
-  function startLessonQuiz() {
+  function attemptToStartLessonQuiz() {
+    if (
+      maxQuestionsCount < GENERATION_LIMITS.MIN_MAX_QUESTIONS_COUNT ||
+      maxQuestionsCount > GENERATION_LIMITS.MAX_MAX_QUESTIONS_COUNT
+    ) {
+      toast({
+        title: "Invalid max questions count",
+        status: "error",
+        duration: 6000,
+        isClosable: true
+      })
+      return
+    }
+
     setQuizState({ ...quizState, quizIsStarted: true })
   }
 
+  if (lessonManager.errorOccured) return <Error statusCode={300} />
+
   return (
-    <Box p="20px">
-      <LessonDetails hideLessonContent={quizIsStarted} />
+    <Flex flexDir="column" h="100vh" p="20px">
+      <Heading as="h1" mb="20px">
+        Revise Lesson
+      </Heading>
 
-      <FormControl isDisabled={quizIsStarted} isRequired maxW="600px" mb="20px">
-        <FormLabel htmlFor={maxQuestionsInputId}>
-          Max Questions To Generate
-        </FormLabel>
-        <NumberInput
-          defaultValue={20}
-          id={maxQuestionsInputId}
-          min={3}
-          max={20}
-          step={1}
+      {lessonManager.isLoading ? (
+        <Flex
+          alignItems="center"
+          justifyContent="center"
+          flex="1 1 150px"
+          minH="150px"
         >
-          <NumberInputField />
-          <NumberInputStepper>
-            <NumberIncrementStepper />
-            <NumberDecrementStepper />
-          </NumberInputStepper>
-        </NumberInput>
-        <FormHelperText>
-          The maximum number of questions to generate for revision. Must be
-          between 3 and 20. Value will be clamped accordingly after input if
-          needed.
-        </FormHelperText>
-      </FormControl>
+          <Spinner color="gray.700" size="xl" />
+        </Flex>
+      ) : (
+        <>
+          <LessonContext.Provider value={lessonManager.lesson}>
+            <LessonDetails hideLessonContent={quizIsStarted} />
+          </LessonContext.Provider>
+          <FormControl
+            borderColor="gray.300"
+            borderStyle="solid"
+            borderWidth="1px 0 0"
+            isDisabled={quizIsStarted}
+            isRequired
+            maxW="600px"
+            mb="20px"
+            pt="20px"
+          >
+            <FormLabel htmlFor={maxQuestionsInputId}>
+              Max Questions To Generate
+            </FormLabel>
+            <NumberInput
+              defaultValue={GENERATION_LIMITS.MAX_MAX_QUESTIONS_COUNT}
+              id={maxQuestionsInputId}
+              min={GENERATION_LIMITS.MIN_MAX_QUESTIONS_COUNT}
+              max={GENERATION_LIMITS.MAX_MAX_QUESTIONS_COUNT}
+              onChange={(value) => setMaxQuestionsCount(value)}
+              step={1}
+            >
+              <NumberInputField />
+              <NumberInputStepper>
+                <NumberIncrementStepper />
+                <NumberDecrementStepper />
+              </NumberInputStepper>
+            </NumberInput>
+            <FormHelperText>
+              The maximum number of questions to generate for revision. Must be
+              between {GENERATION_LIMITS.MIN_MAX_QUESTIONS_COUNT} and
+              {GENERATION_LIMITS.MAX_MAX_QUESTIONS_COUNT}. Value will be clamped
+              accordingly after input if needed.
+            </FormHelperText>
+          </FormControl>
 
-      <Button
-        isDisabled={quizIsStarted}
-        isLoading={quizIsStarted && !quizIsLoaded}
-        onClick={startLessonQuiz}
-      >
-        Start revision
-      </Button>
+          <Box maxW="600px" pb="20px">
+            <Button
+              isDisabled={quizIsStarted}
+              isLoading={quizIsStarted && !quizIsLoaded}
+              onClick={attemptToStartLessonQuiz}
+            >
+              Start revision
+            </Button>
+          </Box>
+        </>
+      )}
 
       {quizIsStarted && (
-        <LessonQuiz quizState={quizState} setQuizState={setQuizState} />
+        <LessonContext.Provider value={lessonManager.lesson}>
+          <LessonQuiz
+            maxQuestionsCount={maxQuestionsCount}
+            quizState={quizState}
+            setQuizState={setQuizState}
+          />
+        </LessonContext.Provider>
       )}
-    </Box>
+    </Flex>
   )
 }
 
 export default function ReviseSpecificLesson() {
-  const DEFAULT_LESSON_ID = "__DEFAULT_LESSON_ID__"
-
-  const router = useRouter()
-  const [routerQuery, setRouterQuery] = useState({
-    "lesson-id": DEFAULT_LESSON_ID
-  })
-
-  const lessonId = routerQuery["lesson-id"]
-
-  useEffect(() => {
-    if (router.isReady) setRouterQuery(router.query)
-  }, [router.isReady, router.query])
+  const lessonManager = useLessonManager()
 
   return (
     <ChakraUIProvider>
-      <QuizJSUtils />
-
       <AppLayout pageTitle={`Revise Lesson | ${SITE_TITLE}`}>
         <AppLayoutSidebar>
           <SideBar>
@@ -226,9 +359,9 @@ export default function ReviseSpecificLesson() {
             <NavGroup heading="Lesson Actions">
               <NavItem
                 href={
-                  lessonId === DEFAULT_LESSON_ID
+                  lessonManager.isLoading
                     ? "#"
-                    : LESSON_REVISION_URL.for(lessonId)
+                    : LESSON_REVISION_URL.for(lessonManager.lesson.id)
                 }
                 icon={BiBookReader}
                 isActive
@@ -239,7 +372,7 @@ export default function ReviseSpecificLesson() {
           </SideBar>
         </AppLayoutSidebar>
         <AppLayoutMainSection>
-          <LessonRevisionSection />
+          <LessonRevisionSection lessonManager={lessonManager} />
         </AppLayoutMainSection>
       </AppLayout>
     </ChakraUIProvider>

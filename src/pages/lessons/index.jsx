@@ -43,7 +43,7 @@ import { AccessPolicyTypes } from "../../controllers/policy"
 
 import * as queries from "../../graphql/queries"
 
-const NUMBER_OF_LESSONS_TO_LOAD_EACH_TIME = 5
+const NUMBER_OF_LESSONS_TO_LOAD_EACH_TIME = 20
 
 function LessonCard({
   lesson = {
@@ -225,7 +225,7 @@ function AllLessonsView() {
     let lessonsTagsLabels = null
 
     try {
-      const tagsFetchingResult = await Promise.all(
+      const lessonsFetchingResults = await Promise.all(
         lessonIds.map((lessonId) =>
           API.graphql({
             query: queries.getLesson,
@@ -235,13 +235,13 @@ function AllLessonsView() {
       )
 
       if (
-        typeof tagsFetchingResult.errors === "object" &&
-        tagsFetchingResult.errors !== null
+        typeof lessonsFetchingResults.errors === "object" &&
+        lessonsFetchingResults.errors !== null
       ) {
-        throw tagsFetchingResult
+        throw lessonsFetchingResults
       }
 
-      lessonsTagsLabels = tagsFetchingResult.map((result) =>
+      lessonsTagsLabels = lessonsFetchingResults.map((result) =>
         result.data.getLesson.tags.items.map((tagObject) => tagObject.tagLabel)
       )
     } catch (error) {

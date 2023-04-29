@@ -12,3 +12,6 @@ export const ALL_LESSONS_URL = "/lessons/"
 export const LESSON_REVISION_URL = {
   for: (lessonId) => `/lessons/${lessonId}/revise`
 }
+
+// API endpoints
+export const QUIZ_GENERATION_URL = "/api/generate-quiz"
