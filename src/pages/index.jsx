@@ -1,14 +1,12 @@
+import { useRouter } from "next/router"
 import { AccessPolicyTypes } from "../controllers/policy"
-import { BasicLayout } from "../components/layout"
-import { SIGN_IN_PAGE_URL } from "../constants/page-urls"
-import { SITE_TITLE } from "../constants/site-details"
+import { ALL_LESSONS_URL, SIGN_IN_PAGE_URL } from "../constants/page-urls"
 
 export default function Home() {
-  return (
-    <BasicLayout pageTitle={`Home | ${SITE_TITLE}`}>
-      Please eat your food
-    </BasicLayout>
-  )
+  const router = useRouter()
+  router.replace(ALL_LESSONS_URL)
+
+  return ""
 }
 
 Home.accessPolicies = [
