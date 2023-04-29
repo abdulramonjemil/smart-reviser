@@ -17,6 +17,12 @@
       },
       "api": {
         "smartreviser": {}
+      },
+      "hosting": {
+        "amplifyhosting": {
+          "appId": "d3vlyuctihqwy1",
+          "type": "cicd"
+        }
       }
     }
   }
