@@ -23,6 +23,7 @@ export default async function handler(req, res) {
     await await SSR.Auth.currentAuthenticatedUser()
     userIsAuthenticated = true
   } catch (error) {
+    console.log(error)
     userIsAuthenticated = false
   }
 
@@ -72,6 +73,7 @@ export default async function handler(req, res) {
       throw lessonContentToUse
     lessonContent = lessonContentToUse
   } catch (error) {
+    console.log(error)
     errorOccuredWhileLoadingLesson = true
   }
 
@@ -85,7 +87,7 @@ export default async function handler(req, res) {
   let questionsCountPerPrompt = 0
   let numberOfPromptChunksToUse = chunksToUseInPrompts.length
 
-  if (maxQuestionsCount > chunksToUseInPrompts.length) {
+  if (maxQuestionsCount >= chunksToUseInPrompts.length) {
     questionsCountPerPrompt = Math.floor(
       maxQuestionsCount / chunksToUseInPrompts.length
     )
@@ -93,8 +95,6 @@ export default async function handler(req, res) {
     questionsCountPerPrompt = 1
     numberOfPromptChunksToUse = maxQuestionsCount
   }
-
-  let errorOccuredWhileConnectingWithMindsDB = false
 
   // See the CREATE MODEL STATEMENT in /src/quiz-gen-prompt.txt and sample in
   // /src/quiz-gen-sample.txt
@@ -104,10 +104,13 @@ export default async function handler(req, res) {
         chunk
       )}`
   )
+
   const quizGenerationQueries = quizGenerationQueriesAlt.slice(
     0,
     numberOfPromptChunksToUse
   )
+
+  let errorOccuredWhileConnectingWithMindsDB = false
 
   try {
     await MindsDB.connect({
@@ -115,6 +118,7 @@ export default async function handler(req, res) {
       password: process.env.MINDSDB_CLOUD_PASSWORD
     })
   } catch (error) {
+    console.log(error)
     errorOccuredWhileConnectingWithMindsDB = true
   }
 
@@ -157,6 +161,7 @@ export default async function handler(req, res) {
 
     singleQuizDetailsObjectToUse = { quizDetails: finalQuizDetailsArray }
   } catch (error) {
+    console.log(error)
     errorOccuredWhileRunningQuery = true
   }
 
