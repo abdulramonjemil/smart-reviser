@@ -43,7 +43,7 @@ export function useLessonManager() {
     })()
   }, [isLoading, lesson, router.isReady, router.query])
 
-  return { errorOccured, isLoading, lesson }
+  return { errorOccured, isLoading, lesson, routerQuery: router.query }
 }
 
 export const LessonContext = createContext({})

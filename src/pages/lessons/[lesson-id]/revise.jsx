@@ -16,7 +16,6 @@ import {
   Textarea,
   useToast
 } from "@chakra-ui/react"
-import Error from "next/error"
 
 import Head from "next/head"
 import Script from "next/script"
@@ -125,11 +124,20 @@ function LessonDetails({ hideLessonContent }) {
 
 function LessonQuiz({ maxQuestionsCount, quizState, setQuizState }) {
   const quizContainerRef = useRef()
+  const quizSpinnerRef = useRef()
   const [createdQuizElement, setCreatedQuizElement] = useState(null)
   const lesson = useLesson()
   const toast = useToast()
 
   useEffect(() => {
+    if (!quizState.quizIsLoaded) {
+      quizSpinnerRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+        inline: "nearest"
+      })
+    }
+
     if (createdQuizElement !== null) return
     ;(async () => {
       const lessonQuizGenerationURL = new URL(
@@ -226,10 +234,22 @@ function LessonQuiz({ maxQuestionsCount, quizState, setQuizState }) {
         borderColor="gray.200"
         borderStyle="solid"
         borderWidth="1px 0 0"
-        ref={quizContainerRef}
         mt="20px"
         p="20px 0"
+        ref={quizContainerRef}
       />
+
+      {!quizState.quizIsLoaded && (
+        <Flex
+          alignItems="center"
+          justifyContent="center"
+          p="30px"
+          ref={quizSpinnerRef}
+          minHeight="200px"
+        >
+          <Spinner color="gray.700" size="xl" />
+        </Flex>
+      )}
     </Box>
   )
 }
@@ -265,24 +285,28 @@ function LessonRevisionSection({ lessonManager }) {
     setQuizState({ ...quizState, quizIsStarted: true })
   }
 
-  if (lessonManager.errorOccured) return <Error statusCode={300} />
-
   return (
     <Flex flexDir="column" h="100vh" p="20px">
       <Heading as="h1" mb="20px">
         Revise Lesson
       </Heading>
 
-      {lessonManager.isLoading ? (
+      {(lessonManager.isLoading || lessonManager.errorOccured) && (
         <Flex
           alignItems="center"
           justifyContent="center"
           flex="1 1 150px"
           minH="150px"
         >
-          <Spinner color="gray.700" size="xl" />
+          {lessonManager.isLoading ? (
+            <Spinner color="gray.700" size="xl" />
+          ) : (
+            <Text>An error occured, lesson could not be loaded</Text>
+          )}
         </Flex>
-      ) : (
+      )}
+
+      {!lessonManager.isLoading && !lessonManager.errorOccured && (
         <>
           <LessonContext.Provider value={lessonManager.lesson}>
             <LessonDetails hideLessonContent={quizIsStarted} />
@@ -361,7 +385,9 @@ export default function ReviseSpecificLesson() {
                 href={
                   lessonManager.isLoading
                     ? "#"
-                    : LESSON_REVISION_URL.for(lessonManager.lesson.id)
+                    : LESSON_REVISION_URL.for(
+                        lessonManager.routerQuery["lesson-id"]
+                      )
                 }
                 icon={BiBookReader}
                 isActive
@@ -385,6 +411,3 @@ ReviseSpecificLesson.accessPolicies = [
     alternateSource: SIGN_IN_PAGE_URL
   }
 ]
-
-// Things to do later
-// - Export a getServerSidePropsMethod() method to send 404 page if needed

@@ -14,7 +14,7 @@ export function BasicLayout({ pageTitle, children }) {
 
 export function AppLayout({ children, pageTitle }) {
   return (
-    <Flex flexDir="row">
+    <Flex flexDir="row" minW="850px">
       <Head>
         <title>{pageTitle}</title>
       </Head>
