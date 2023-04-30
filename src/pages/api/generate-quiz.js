@@ -23,7 +23,7 @@ export default async function handler(req, res) {
     await await SSR.Auth.currentAuthenticatedUser()
     userIsAuthenticated = true
   } catch (error) {
-    console.log(error)
+    console.log("User is not authenticated", error)
     userIsAuthenticated = false
   }
 
@@ -73,7 +73,7 @@ export default async function handler(req, res) {
       throw lessonContentToUse
     lessonContent = lessonContentToUse
   } catch (error) {
-    console.log(error)
+    console.log("Error occured while loading lesson", error)
     errorOccuredWhileLoadingLesson = true
   }
 
@@ -112,13 +112,22 @@ export default async function handler(req, res) {
 
   let errorOccuredWhileConnectingWithMindsDB = false
 
+  console.log(
+    "process.env.MINDSDB_CLOUD_USERNAME",
+    process.env.MINDSDB_CLOUD_USERNAME
+  )
+  console.log(
+    "process.env.MINDSDB_CLOUD_PASSWORD",
+    process.env.MINDSDB_CLOUD_PASSWORD
+  )
+
   try {
     await MindsDB.connect({
       user: process.env.MINDSDB_CLOUD_USERNAME,
       password: process.env.MINDSDB_CLOUD_PASSWORD
     })
   } catch (error) {
-    console.log(error)
+    console.log("Error occured while connecting with MindsDB", error)
     errorOccuredWhileConnectingWithMindsDB = true
   }
 
@@ -161,7 +170,7 @@ export default async function handler(req, res) {
 
     singleQuizDetailsObjectToUse = { quizDetails: finalQuizDetailsArray }
   } catch (error) {
-    console.log(error)
+    console.log("Error occured while running query", error)
     errorOccuredWhileRunningQuery = true
   }
 
