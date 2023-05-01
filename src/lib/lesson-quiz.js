@@ -16,7 +16,7 @@ export const MIN_LESSON_CONTENT_WORD_COUNT = 150
  * Break lesson content in chunks to be used with quiz generation prompt on two
  * or more line breaks
  */
-export const LESSON_CONTENT_SPLITTER_IN_CHUNKS = /\n{2,}/
+export const LESSON_CONTENT_SPLITTER_IN_CHUNKS = /\n{1,}/
 
 /**
  * I would like to use a value greater than these for the two values below, but
@@ -30,11 +30,11 @@ export const LESSON_CONTENT_SPLITTER_IN_CHUNKS = /\n{2,}/
  * to be so. If the values must be higher, I might have to manually deploy the
  * function to Lambda somehow instead of deploying it as an API route.
  */
-export const MAX_WORDS_PER_LESSON_PROMPT_CHUNK = 300
+export const MAX_WORDS_PER_LESSON_PROMPT_CHUNK = 200
 export const HIGHEST_MAX_QUESTIONS_COUNT_PER_PROMPT = 3
 
 // Used to make sure that very short chunks are not used alone when possible
-export const MIN_SENSIBLE_WORD_COUNT_OF_LESSON_PROMPT_CHUNK = 60
+export const MIN_SENSIBLE_WORD_COUNT_OF_LESSON_PROMPT_CHUNK = 40
 
 export function toUsablePromptChunks(content) {
   if (typeof content !== "string")
