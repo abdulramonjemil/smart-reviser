@@ -145,7 +145,17 @@ export default async function handler(req, res) {
     const quizDetailsStringsArray = queryResults.map(
       (result) => result.rows[0].lesson_quiz
     )
-    if (!quizDetailsStringsArray.every(isValidQuizDetails)) throw queryResults
+
+    if (
+      !quizDetailsStringsArray.every((quizDetailsString) => {
+        const stringIsValidQuizDetails = isValidQuizDetails(quizDetailsString)
+        if (!stringIsValidQuizDetails)
+          console.log("Got invalid quiz details string: ", quizDetailsString)
+        return stringIsValidQuizDetails
+      })
+    ) {
+      throw queryResults
+    }
 
     const quizDetailsObjectsArray = quizDetailsStringsArray.map(
       (detailsString) => JSON.parse(detailsString)
