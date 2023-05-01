@@ -86,7 +86,7 @@ export default async function handler(req, res) {
 
   const chunksToUseInPrompts = toUsablePromptChunks(lessonContent)
 
-  let questionsCountPerPrompt = HIGHEST_MAX_QUESTIONS_COUNT_PER_PROMPT
+  let questionsCountPerPrompt = 0
   let numberOfPromptChunksToUse = chunksToUseInPrompts.length
 
   if (maxQuestionsCount >= chunksToUseInPrompts.length) {
@@ -94,8 +94,11 @@ export default async function handler(req, res) {
       maxQuestionsCount / chunksToUseInPrompts.length
     )
 
-    if (potentialHighestQuestionsCountPerPrompt < questionsCountPerPrompt)
-      questionsCountPerPrompt = potentialHighestQuestionsCountPerPrompt
+    questionsCountPerPrompt =
+      potentialHighestQuestionsCountPerPrompt <
+      HIGHEST_MAX_QUESTIONS_COUNT_PER_PROMPT
+        ? potentialHighestQuestionsCountPerPrompt
+        : HIGHEST_MAX_QUESTIONS_COUNT_PER_PROMPT
   } else {
     questionsCountPerPrompt = 1
     numberOfPromptChunksToUse = maxQuestionsCount
