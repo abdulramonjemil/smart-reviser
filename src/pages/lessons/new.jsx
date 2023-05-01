@@ -223,7 +223,7 @@ function PDFPagesParsingManager({
 
         return `${prevPageContent}${contentSplitter}[[PDF PAGE - ${
           currentIndex + startPage
-        }]]\n\n${pageContentString}`
+        }]]\n${pageContentString}`
       },
       ""
     )
