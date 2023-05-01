@@ -4,6 +4,7 @@ import mysql from "mysql"
 
 import * as queries from "../../graphql/queries"
 import {
+  HIGHEST_MAX_QUESTIONS_COUNT_PER_PROMPT,
   isValidQuizDetails,
   QUIZ_GENERATION_PARAMS,
   QUIZ_GEN_HIGHEST_MAX_QUESTIONS_COUNT,
@@ -85,13 +86,16 @@ export default async function handler(req, res) {
 
   const chunksToUseInPrompts = toUsablePromptChunks(lessonContent)
 
-  let questionsCountPerPrompt = 0
+  let questionsCountPerPrompt = HIGHEST_MAX_QUESTIONS_COUNT_PER_PROMPT
   let numberOfPromptChunksToUse = chunksToUseInPrompts.length
 
   if (maxQuestionsCount >= chunksToUseInPrompts.length) {
-    questionsCountPerPrompt = Math.floor(
+    const potentialHighestQuestionsCountPerPrompt = Math.floor(
       maxQuestionsCount / chunksToUseInPrompts.length
     )
+
+    if (potentialHighestQuestionsCountPerPrompt < questionsCountPerPrompt)
+      questionsCountPerPrompt = potentialHighestQuestionsCountPerPrompt
   } else {
     questionsCountPerPrompt = 1
     numberOfPromptChunksToUse = maxQuestionsCount

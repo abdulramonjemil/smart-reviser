@@ -17,7 +17,24 @@ export const MIN_LESSON_CONTENT_WORD_COUNT = 150
  * or more line breaks
  */
 export const LESSON_CONTENT_SPLITTER_IN_CHUNKS = /\n{2,}/
-export const MAX_WORDS_PER_LESSON_PROMPT_CHUNK = 1200
+
+/**
+ * I would like to use a value greater than these for the two values below, but
+ * I figured out after deploying to AWS Amplify that the requests time out after
+ * thirty seconds. As a result, even though higher values work normally in
+ * development, they don't really work when deployed to AWS Amplify. I'm still
+ * finding a way to get around this, but until then, these lower values should
+ * be used.
+ *
+ * I thought Amplify deployed API routes to AWS Lambda@-edge but it doesn't seem
+ * to be so. If the values must be higher, I might have to manually deploy the
+ * function to Lambda somehow instead of deploying it as an API route.
+ */
+export const MAX_WORDS_PER_LESSON_PROMPT_CHUNK = 300
+export const HIGHEST_MAX_QUESTIONS_COUNT_PER_PROMPT = 3
+
+// Used to make sure that very short chunks are not used alone when possible
+export const MIN_SENSIBLE_WORD_COUNT_OF_LESSON_PROMPT_CHUNK = 60
 
 export function toUsablePromptChunks(content) {
   if (typeof content !== "string")
@@ -39,13 +56,30 @@ export function toUsablePromptChunks(content) {
       }
 
       const wordCountOfCurrentValue = contentChunksWordCounts[index]
-      const newCombinedWordCount = lastSummedWordCount + wordCountOfCurrentValue
+      const wordCountOfNextValue = contentChunksWordCounts[index] || 0
+      const wordCountOfCurrentPlusLastChunk =
+        lastSummedWordCount + wordCountOfCurrentValue
 
-      if (newCombinedWordCount <= MAX_WORDS_PER_LESSON_PROMPT_CHUNK) {
-        promptChunksArray[
-          promptChunksArray.length - 1
-        ] += `${LESSON_CONTENT_SPLITTER_IN_CHUNKS}${currentValue}`
-        lastSummedWordCount = newCombinedWordCount
+      const currentShouldNormallyBeJoinedWithLast =
+        wordCountOfCurrentPlusLastChunk <= MAX_WORDS_PER_LESSON_PROMPT_CHUNK
+
+      const currentIsShort =
+        wordCountOfCurrentValue < MIN_SENSIBLE_WORD_COUNT_OF_LESSON_PROMPT_CHUNK
+
+      const currentWontBeJoinedWithNext =
+        wordCountOfCurrentValue + wordCountOfNextValue >
+        MAX_WORDS_PER_LESSON_PROMPT_CHUNK
+
+      const currentIsLastChunk = index === contentChunks.length - 1
+      const currentShouldAbnormallyBeJoinedWithLast =
+        currentIsShort && (currentIsLastChunk || currentWontBeJoinedWithNext)
+
+      if (
+        currentShouldNormallyBeJoinedWithLast ||
+        currentShouldAbnormallyBeJoinedWithLast
+      ) {
+        promptChunksArray[promptChunksArray.length - 1] += `\n\n${currentValue}`
+        lastSummedWordCount = wordCountOfCurrentPlusLastChunk
       } else {
         promptChunksArray.push(currentValue)
         lastSummedWordCount = wordCountOfCurrentValue
@@ -84,14 +118,11 @@ export function isValidQuizDetails(resultString) {
   if (!Array.isArray(quizDetailsArray)) return false
   if (quizDetailsArray.length === 0) return false
 
-  function isValidQuestionObject(value) {
+  const isValidQuestionObject = (value) => {
     if (typeof value !== "object" || value === null) return false
     const { question, options, answer, explanation } = value
 
-    function isNonEmptyString(val) {
-      return typeof val === "string" && val !== ""
-    }
-
+    const isNonEmptyString = (val) => typeof val === "string" && val !== ""
     if (!isNonEmptyString(question)) return false
     if (typeof options !== "object" || options === null) return false
 
