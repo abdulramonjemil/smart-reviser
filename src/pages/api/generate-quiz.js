@@ -4,11 +4,12 @@ import mysql from "mysql"
 
 import * as queries from "../../graphql/queries"
 import {
-  GENERATION_LIMITS,
   isValidQuizDetails,
   QUIZ_GENERATION_PARAMS,
+  QUIZ_GEN_HIGHEST_MAX_QUESTIONS_COUNT,
+  QUIZ_GEN_LOWEST_MAX_QUESTIONS_COUNT,
   toUsablePromptChunks
-} from "../../lib/quiz-generation"
+} from "../../lib/lesson-quiz"
 
 export default async function handler(req, res) {
   const SSR = withSSRContext({ req })
@@ -48,8 +49,8 @@ export default async function handler(req, res) {
   if (
     typeof maxQuestionsCount !== "number" ||
     !Number.isInteger(maxQuestionsCount) ||
-    maxQuestionsCount < GENERATION_LIMITS.MIN_MAX_QUESTIONS_COUNT ||
-    maxQuestionsCount > GENERATION_LIMITS.MAX_MAX_QUESTIONS_COUNT
+    maxQuestionsCount < QUIZ_GEN_LOWEST_MAX_QUESTIONS_COUNT ||
+    maxQuestionsCount > QUIZ_GEN_HIGHEST_MAX_QUESTIONS_COUNT
   ) {
     res
       .status(400)

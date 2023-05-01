@@ -51,9 +51,10 @@ import { AccessPolicyTypes } from "../../../controllers/policy"
 import { uniqueId } from "../../../lib/markup"
 
 import {
-  GENERATION_LIMITS,
-  QUIZ_GENERATION_PARAMS
-} from "../../../lib/quiz-generation"
+  QUIZ_GENERATION_PARAMS,
+  QUIZ_GEN_HIGHEST_MAX_QUESTIONS_COUNT,
+  QUIZ_GEN_LOWEST_MAX_QUESTIONS_COUNT
+} from "../../../lib/lesson-quiz"
 
 function QuizJSUtils() {
   return (
@@ -262,7 +263,7 @@ function LessonRevisionSection({ lessonManager }) {
 
   const toast = useToast()
   const [maxQuestionsCount, setMaxQuestionsCount] = useState(
-    GENERATION_LIMITS.MAX_MAX_QUESTIONS_COUNT
+    QUIZ_GEN_HIGHEST_MAX_QUESTIONS_COUNT
   )
 
   const maxQuestionsInputId = uniqueId("max-questions-count-input")
@@ -270,8 +271,8 @@ function LessonRevisionSection({ lessonManager }) {
 
   function attemptToStartLessonQuiz() {
     if (
-      maxQuestionsCount < GENERATION_LIMITS.MIN_MAX_QUESTIONS_COUNT ||
-      maxQuestionsCount > GENERATION_LIMITS.MAX_MAX_QUESTIONS_COUNT
+      maxQuestionsCount < QUIZ_GEN_LOWEST_MAX_QUESTIONS_COUNT ||
+      maxQuestionsCount > QUIZ_GEN_HIGHEST_MAX_QUESTIONS_COUNT
     ) {
       toast({
         title: "Invalid max questions count",
@@ -325,10 +326,10 @@ function LessonRevisionSection({ lessonManager }) {
               Max Questions To Generate
             </FormLabel>
             <NumberInput
-              defaultValue={GENERATION_LIMITS.MAX_MAX_QUESTIONS_COUNT}
+              defaultValue={QUIZ_GEN_HIGHEST_MAX_QUESTIONS_COUNT}
               id={maxQuestionsInputId}
-              min={GENERATION_LIMITS.MIN_MAX_QUESTIONS_COUNT}
-              max={GENERATION_LIMITS.MAX_MAX_QUESTIONS_COUNT}
+              min={QUIZ_GEN_LOWEST_MAX_QUESTIONS_COUNT}
+              max={QUIZ_GEN_HIGHEST_MAX_QUESTIONS_COUNT}
               onChange={(value) => setMaxQuestionsCount(value)}
               step={1}
             >
@@ -340,8 +341,8 @@ function LessonRevisionSection({ lessonManager }) {
             </NumberInput>
             <FormHelperText>
               The maximum number of questions to generate for revision. Must be
-              between {GENERATION_LIMITS.MIN_MAX_QUESTIONS_COUNT} and
-              {GENERATION_LIMITS.MAX_MAX_QUESTIONS_COUNT}. Value will be clamped
+              between {QUIZ_GEN_LOWEST_MAX_QUESTIONS_COUNT} and
+              {QUIZ_GEN_HIGHEST_MAX_QUESTIONS_COUNT}. Value will be clamped
               accordingly after input if needed.
             </FormHelperText>
           </FormControl>

@@ -5,10 +5,12 @@ export const QUIZ_GENERATION_PARAMS = {
   MAX_QUESTIONS_COUNT: "max_questions_count"
 }
 
-export const GENERATION_LIMITS = {
-  MIN_MAX_QUESTIONS_COUNT: 3,
-  MAX_MAX_QUESTIONS_COUNT: 10
-}
+export const QUIZ_GEN_LOWEST_MAX_QUESTIONS_COUNT = 3
+export const QUIZ_GEN_HIGHEST_MAX_QUESTIONS_COUNT = 10
+
+export const MAX_LESSON_CONTENT_CHAR_COUNT = 20000
+export const MAX_LESSON_CONTENT_WORD_COUNT = 4000
+export const MIN_LESSON_CONTENT_WORD_COUNT = 150
 
 /**
  * Break lesson content in chunks to be used with quiz generation prompt on two

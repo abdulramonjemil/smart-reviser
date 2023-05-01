@@ -50,11 +50,18 @@ import {
   LESSON_REVISION_URL,
   SIGN_IN_PAGE_URL
 } from "../../constants/page-urls"
+
 import { SITE_TITLE } from "../../constants/site-details"
 import { ChakraUIProvider } from "../../controllers/chakra-ui"
 import { AccessPolicyTypes } from "../../controllers/policy"
 import { uniqueId } from "../../lib/markup"
 import { countWords } from "../../lib/counter"
+
+import {
+  MAX_LESSON_CONTENT_CHAR_COUNT,
+  MAX_LESSON_CONTENT_WORD_COUNT,
+  MIN_LESSON_CONTENT_WORD_COUNT
+} from "../../lib/lesson-quiz"
 
 import * as queries from "../../graphql/queries"
 import * as mutations from "../../graphql/mutations"
@@ -69,9 +76,6 @@ const DEFAULT_NEW_LESSON_DATA = {
 const NewLessonDataContext = createContext(DEFAULT_NEW_LESSON_DATA)
 
 const MAX_ACCEPTABLE_PDF_FILE_SIZE = 5 * 1e6 // (in bytes)
-const MAX_LESSON_CONTENT_CHAR_COUNT = 20000
-const MAX_LESSON_CONTENT_WORD_COUNT = 4000
-const MIN_LESSON_CONTENT_WORD_COUNT = 150
 const MIN_TAG_LABEL_CHAR_COUNT = 2
 const MAX_TAG_LABEL_CHAR_COUNT = 20
 
