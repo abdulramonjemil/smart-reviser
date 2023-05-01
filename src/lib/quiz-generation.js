@@ -10,8 +10,12 @@ export const GENERATION_LIMITS = {
   MAX_MAX_QUESTIONS_COUNT: 10
 }
 
+/**
+ * Break lesson content in chunks to be used with quiz generation prompt on two
+ * or more line breaks
+ */
+export const LESSON_CONTENT_SPLITTER_IN_CHUNKS = /\n{2,}/
 export const MAX_WORDS_PER_LESSON_PROMPT_CHUNK = 1200
-export const LESSON_CONTENT_SPLITTER_IN_CHUNKS = "\n\n"
 
 export function toUsablePromptChunks(content) {
   if (typeof content !== "string")
