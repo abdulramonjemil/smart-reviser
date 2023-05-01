@@ -112,15 +112,6 @@ export default async function handler(req, res) {
 
   let errorOccuredWhileConnectingWithMindsDB = false
 
-  console.log(
-    "process.env.MINDSDB_CLOUD_USERNAME",
-    process.env.MINDSDB_CLOUD_USERNAME
-  )
-  console.log(
-    "process.env.MINDSDB_CLOUD_PASSWORD",
-    process.env.MINDSDB_CLOUD_PASSWORD
-  )
-
   try {
     await MindsDB.connect({
       user: process.env.MINDSDB_CLOUD_USERNAME,
