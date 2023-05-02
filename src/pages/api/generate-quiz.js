@@ -84,7 +84,9 @@ export default async function handler(req, res) {
     return
   }
 
-  const chunksToUseInPrompts = toUsablePromptChunks(lessonContent)
+  // Mindsdb SQL errors when it encounters single quotes for some reason
+  const finalLessonContentToUse = lessonContent.replace(/'/g, "ʼ")
+  const chunksToUseInPrompts = toUsablePromptChunks(finalLessonContentToUse)
 
   let questionsCountPerPrompt = 0
   let numberOfPromptChunksToUse = chunksToUseInPrompts.length
