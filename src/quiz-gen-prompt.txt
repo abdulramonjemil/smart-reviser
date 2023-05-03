@@ -5,14 +5,15 @@ engine = 'openai',
 max_tokens = 2048,  
 temperature = 1,  
 prompt_template = '  
+Read everything below carefully:  
 {{lesson_content}}
 
-All of the above (every single thing you have read till now) is
-the content of the lesson discussed by a teacher in a class. The teacher wants
-to give the students an exercise based on the text, and they are to take the
-exercise on a web app. Create a valid JSON object containing {{questions_count}}
-questions (or less if that amount can not possibly be generated) that the
-teacher can parse to create a quiz for the students in the web app. The JSON must adhere
+All of the above (every single thing you have read till now) is the content of
+the lesson discussed by a teacher in a class. The teacher wants to give the
+students an exercise based on this lesson, and they are to take the exercise on
+a web app. Create a valid JSON object containing {{questions_count}} questions
+(or less if that amount can not possibly be generated) that the teacher can
+parse in the web app to create a quiz for the students. The JSON must adhere
 strictly to the following format:
 
 {
@@ -32,13 +33,14 @@ strictly to the following format:
   ]
 }
 
-Again, your response must be valid JSON, and it must be in the above format. This means
-your response must start with a "{" which will be the start of the JSON, and it
-must end with a "}" which will be the end of the JSON. You must not include
-anything like "Here are x possible questions...". You must respond with just
-valid JSON in the above format. Also, the questions, options, and explanations
-must contain no line breaks. Also, make sure to make the answer options are
-random as possible.
+Again, your response must be valid JSON, must be in the above format, and must
+be based on the lesson contents you have read earlier. This means your response
+must start with a "{" which will be the start of the JSON, and it must end with
+a "}" which will be the end of the JSON. You must not include anything like
+"Here are x possible questions...". You must respond with just valid JSON in the
+above format. Also, the questions, options, and explanations must contain no
+line breaks. Also, make sure to make the answer options are random as possible.
+Again, your response must be valid JSON, must be in the above format, and must
+be based on the lesson contents you have read earlier.
 
-The RFC8259 compliant JSON containing the questions:
-';
+The RFC8259 compliant JSON containing the questions: ';
