@@ -156,16 +156,36 @@ export default async function handler(req, res) {
       (result) => result.rows[0].lesson_quiz
     )
 
-    const everyQuizDetailsStringIsValid = quizDetailsStringsArray.every(
+    const everyQuizDetailsStringIsUsable = quizDetailsStringsArray.every(
       (quizDetailsString) => {
-        const stringIsValidQuizDetails = isValidQuizDetails(quizDetailsString)
+        // In case the model returns a value that's not directly a valid JSON,
+        // we'll look for the first occurrence of an opening curly brace, and
+        // the last occurrence of a closing curly brace in the string, extract
+        // it, and try to parse as JSON instead of the whole string.
+        const indexOfFirstOpeningCurlyBrace = quizDetailsString.indexOf("{")
+        const indexOfLastClosingCurlyBrace = quizDetailsString.lastIndexOf("}")
+
+        if (indexOfFirstOpeningCurlyBrace < 0) return false
+        if (indexOfLastClosingCurlyBrace < 0) return false
+        if (indexOfLastClosingCurlyBrace < indexOfFirstOpeningCurlyBrace)
+          return false
+
+        const quizDetailsStringToValidate = quizDetailsString.substring(
+          indexOfFirstOpeningCurlyBrace,
+          indexOfLastClosingCurlyBrace + 1
+        )
+
+        const stringIsValidQuizDetails = isValidQuizDetails(
+          quizDetailsStringToValidate
+        )
+
         if (!stringIsValidQuizDetails)
-          console.log("Got invalid quiz details string: ", quizDetailsString)
+          console.log("Got unusable quiz details string: ", quizDetailsString)
         return stringIsValidQuizDetails
       }
     )
 
-    if (!everyQuizDetailsStringIsValid) throw queryResults
+    if (!everyQuizDetailsStringIsUsable) throw queryResults
     const quizDetailsObjectsArray = quizDetailsStringsArray.map(
       (quizDetailsString) => JSON.parse(quizDetailsString)
     )
