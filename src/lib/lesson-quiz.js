@@ -78,7 +78,7 @@ export function toUsablePromptChunks(content) {
         currentShouldNormallyBeJoinedWithLast ||
         currentShouldAbnormallyBeJoinedWithLast
       ) {
-        promptChunksArray[promptChunksArray.length - 1] += `\n\n${currentValue}`
+        promptChunksArray[promptChunksArray.length - 1] += `\n${currentValue}`
         lastSummedWordCount = wordCountOfCurrentPlusLastChunk
       } else {
         promptChunksArray.push(currentValue)
@@ -89,6 +89,18 @@ export function toUsablePromptChunks(content) {
     },
     []
   )
+
+  const chunksCount = usablePromptChunks.length
+  const lastChunk = usablePromptChunks[chunksCount - 1]
+  const wordCountOfLastChunk = countWords(lastChunk)
+  const lastChunkIsShort =
+    wordCountOfLastChunk < MIN_SENSIBLE_WORD_COUNT_OF_LESSON_PROMPT_CHUNK
+
+  if (lastChunkIsShort && chunksCount > 1) {
+    // Append last chunk to the one before it and remove it
+    usablePromptChunks[chunksCount - 2] += `\n${lastChunk}`
+    usablePromptChunks.pop()
+  }
 
   return usablePromptChunks
 }
