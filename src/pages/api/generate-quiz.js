@@ -3,9 +3,11 @@ import MindsDB from "mindsdb-js-sdk"
 import mysql from "mysql"
 
 import * as queries from "../../graphql/queries"
+import { countWords } from "../../lib/counter"
 import {
   HIGHEST_MAX_QUESTIONS_COUNT_PER_PROMPT,
   isValidQuizDetails,
+  MIN_LESSON_CONTENT_WORD_COUNT,
   QUIZ_GENERATION_PARAMS,
   QUIZ_GEN_HIGHEST_MAX_QUESTIONS_COUNT,
   QUIZ_GEN_LOWEST_MAX_QUESTIONS_COUNT,
@@ -87,6 +89,24 @@ export default async function handler(req, res) {
   // Mindsdb SQL errors when it encounters single quotes for some reason
   const finalLessonContentToUse = lessonContent.replace(/'/g, "ʼ")
   const chunksToUseInPrompts = toUsablePromptChunks(finalLessonContentToUse)
+
+  if (chunksToUseInPrompts.length < 2) {
+    if (
+      chunksToUseInPrompts.length === 0 ||
+      countWords(chunksToUseInPrompts[0]) < MIN_LESSON_CONTENT_WORD_COUNT
+    ) {
+      console.log(
+        "Lesson content word count is not up to the required minimum",
+        "Lesson content:",
+        lessonContent
+      )
+
+      res
+        .staus(400)
+        .end("Lesson content word count is not up to the required minimum")
+      return
+    }
+  }
 
   let questionsCountPerPrompt = 0
   let numberOfPromptChunksToUse = chunksToUseInPrompts.length
