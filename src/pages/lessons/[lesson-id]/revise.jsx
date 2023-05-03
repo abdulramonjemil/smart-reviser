@@ -78,7 +78,7 @@ function LessonDetails({ hideLessonContent }) {
   const lesson = useLesson()
 
   return (
-    <Box maxW="600px">
+    <Box maxW="600px" p="0 20px">
       <Box mb="20px">
         <Heading
           as="h2"
@@ -232,7 +232,7 @@ function LessonQuiz({ maxQuestionsCount, quizState, setQuizState }) {
   }, [])
 
   return (
-    <Box>
+    <Box p={{ base: 0, sm: "0 20px" }}>
       <QuizJSUtils />
       <Box
         borderColor="gray.200"
@@ -290,8 +290,8 @@ function LessonRevisionSection({ lessonManager }) {
   }
 
   return (
-    <Flex flexDir="column" h="100vh" p="20px">
-      <Heading as="h1" mb="20px">
+    <Flex flexDir="column" h="100vh" p="20px 0">
+      <Heading as="h1" mb="20px" p="0 20px">
         Revise Lesson
       </Heading>
 
@@ -301,6 +301,7 @@ function LessonRevisionSection({ lessonManager }) {
           justifyContent="center"
           flex="1 1 150px"
           minH="150px"
+          p="0 20px"
         >
           {lessonManager.isLoading ? (
             <Spinner color="gray.700" size="xl" />
@@ -323,6 +324,7 @@ function LessonRevisionSection({ lessonManager }) {
             isRequired
             maxW="600px"
             mb="20px"
+            p="20px 20px 0"
             pt="20px"
           >
             <FormLabel htmlFor={maxQuestionsInputId}>
@@ -344,13 +346,13 @@ function LessonRevisionSection({ lessonManager }) {
             </NumberInput>
             <FormHelperText>
               The maximum number of questions to generate for revision. Must be
-              between {QUIZ_GEN_LOWEST_MAX_QUESTIONS_COUNT} and
+              between {QUIZ_GEN_LOWEST_MAX_QUESTIONS_COUNT} and{" "}
               {QUIZ_GEN_HIGHEST_MAX_QUESTIONS_COUNT}. Value will be clamped
               accordingly after input if needed.
             </FormHelperText>
           </FormControl>
 
-          <Box maxW="600px" pb="20px">
+          <Box maxW="600px" p="0 20px 20px">
             <Button
               isDisabled={quizIsStarted}
               isLoading={quizIsStarted && !quizIsLoaded}

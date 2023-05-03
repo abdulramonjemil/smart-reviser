@@ -39,7 +39,7 @@ export function AppLayout({ children, pageTitle }) {
 
   const appIsOnDesktopMode = useBreakpointValue(
     { base: false, [DESKTOP_MODE_BREAK_POINT]: true },
-    { fallback: DESKTOP_MODE_BREAK_POINT }
+    { fallback: "base" }
   )
 
   const appLayoutContextValue = useMemo(
