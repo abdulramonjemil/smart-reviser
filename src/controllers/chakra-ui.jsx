@@ -6,7 +6,19 @@ export const Fonts = {
   heading: "'Kanit', sans-serif"
 }
 
+export const Colors = {
+  almostWhite: "rgb(245 245 245)"
+}
+
 const additionalThemeConfig = {
+  breakpoints: {
+    sm: "480px",
+    md: "768px",
+    lg: "960px",
+    xl: "1200px",
+    "2xl": "1536px"
+  },
+
   colors: {
     brand: {
       primary: "rgb(52 4 68)",
@@ -15,7 +27,6 @@ const additionalThemeConfig = {
   },
 
   fonts: Fonts,
-
   styles: {
     global: {
       body: {

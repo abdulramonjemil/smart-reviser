@@ -5,6 +5,7 @@ import {
   Flex,
   Heading,
   Icon,
+  IconButton,
   Image,
   List,
   ListIcon,
@@ -17,9 +18,11 @@ import { Auth } from "aws-amplify"
 import { useRouter } from "next/router"
 
 import { AiOutlineUser } from "react-icons/ai"
-import { BsCollection } from "react-icons/bs"
 import { CgAddR } from "react-icons/cg"
 import { FiLogOut } from "react-icons/fi"
+import { HiOutlineCollection } from "react-icons/hi"
+import { TfiMenu } from "react-icons/tfi"
+import { VscChromeClose } from "react-icons/vsc"
 
 import {
   ADD_NEW_LESSON_URL,
@@ -28,21 +31,23 @@ import {
 } from "../constants/page-urls"
 import { SITE_TITLE } from "../constants/site-details"
 import { useLastAuth } from "../controllers/auth"
+import { Fonts } from "../controllers/chakra-ui"
 import {
   AccessPolicyTypes,
   useAccessPolicyManager
 } from "../controllers/policy"
+import { useAppLayout } from "./layout"
 
 export function NavItem({ children, href, icon, isActive = false, onClick }) {
   return (
     <ListItem>
       <Link
         alignItems="center"
+        bg={isActive ? "blackAlpha.400" : "transparent"}
         borderRadius="4px"
         color="gray.300"
         display="flex"
         fontSize=".9rem"
-        fontWeight={isActive ? "700" : "400"}
         href={href}
         m="0 10px"
         onClick={onClick}
@@ -54,10 +59,10 @@ export function NavItem({ children, href, icon, isActive = false, onClick }) {
         <ListIcon
           as={icon}
           bg={isActive ? "gray.300" : "transparent"}
-          borderRadius="4px"
+          borderRadius="2px"
           color={isActive ? "brand.primary" : "gray.300"}
           fontSize="1.5rem"
-          p="3px"
+          p={isActive ? "3px" : "1px"}
         />
         {children}
       </Link>
@@ -67,7 +72,7 @@ export function NavItem({ children, href, icon, isActive = false, onClick }) {
 
 export function NavGroup({ heading, children }) {
   return (
-    <List display="flex" flexDir="column" gap="5px" mb="30px">
+    <List display="flex" flexDir="column" gap="2px" mb="30px">
       <Heading
         as="div"
         color="gray.300"
@@ -97,7 +102,7 @@ export function TopLevelNavGroup({ activeURL = "" }) {
       </NavItem>
       <NavItem
         href={ALL_LESSONS_URL}
-        icon={BsCollection}
+        icon={HiOutlineCollection}
         isActive={activeURL === ALL_LESSONS_URL}
       >
         View all lessons
@@ -110,6 +115,8 @@ export function SideBar({ children }) {
   const { user: lastAuthUser } = useLastAuth()
   const router = useRouter()
   const toast = useToast()
+  const { isOnDesktopMode: appIsOnDesktopMode, setMinorSectionOpenState } =
+    useAppLayout()
 
   const accessPolicyManager = useAccessPolicyManager()
 
@@ -153,18 +160,40 @@ export function SideBar({ children }) {
       as="aside"
       bg="brand.primary"
       flexDir="column"
-      h="100vh"
+      h="100%"
       overflow="auto"
     >
-      <Image
-        alt={`${SITE_TITLE} logo`}
-        borderRadius="4px"
-        flex="0 0 max-content"
-        h="50px"
-        m="20px 20px 40px"
-        w="50px"
-        src="/assets/site-logo-bg-white.svg"
-      />
+      <Flex
+        alignItems="flex-start"
+        justifyContent="space-between"
+        m="20px 10px 40px 20px"
+      >
+        <Link href="/" _hover={{ opacity: ".9" }}>
+          <Image
+            alt={`${SITE_TITLE} logo`}
+            borderRadius="4px"
+            flex="0 0 max-content"
+            h="50px"
+            w="50px"
+            src="/assets/site-logo-bg-white.svg"
+          />
+        </Link>
+
+        {!appIsOnDesktopMode && (
+          <IconButton
+            aria-label="Close menu"
+            color="white"
+            icon={<VscChromeClose />}
+            onClick={() => {
+              setMinorSectionOpenState(false)
+            }}
+            size="lg"
+            variant="ghost"
+            _focus={{ bg: "blackAlpha.400" }}
+            _hover={{ bg: "blackAlpha.400" }}
+          />
+        )}
+      </Flex>
 
       <Flex
         display="flex"
@@ -223,6 +252,63 @@ export function SideBar({ children }) {
           </Link>
         </Flex>
       </Flex>
+    </Flex>
+  )
+}
+
+export function TopBar() {
+  const { setMinorSectionOpenState } = useAppLayout()
+
+  return (
+    <Flex
+      alignItems="center"
+      borderBottom="1px solid gray"
+      borderColor="gray.300"
+      justifyContent="space-between"
+      bg="white"
+      h="100%"
+      p="0 20px"
+      w="100%"
+    >
+      <Link
+        display="flex"
+        alignItems="center"
+        justifyContent="flex-start"
+        href="/"
+        _hover={{ opacity: ".9" }}
+      >
+        <Image
+          alt={`${SITE_TITLE} logo`}
+          borderRadius="4px"
+          flex="0 0 max-content"
+          h="40px"
+          mr="10px"
+          w="40px"
+          src="/assets/site-logo.svg"
+        />
+        <Box
+          as="span"
+          color={{ base: "transparent", sm: "brand.primary" }}
+          fontFamily={Fonts.body}
+          fontSize="1.45rem"
+          fontWeight="500"
+        >
+          {SITE_TITLE}
+        </Box>
+      </Link>
+
+      <IconButton
+        aria-label="Close menu"
+        color="brand.primary"
+        icon={<TfiMenu />}
+        onClick={() => {
+          setMinorSectionOpenState(true)
+        }}
+        size="lg"
+        variant="ghost"
+        _focus={{ bg: "blackAlpha.200" }}
+        _hover={{ bg: "blackAlpha.200" }}
+      />
     </Flex>
   )
 }

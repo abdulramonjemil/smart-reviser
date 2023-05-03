@@ -26,7 +26,9 @@ import { API } from "aws-amplify"
 import {
   AppLayout,
   AppLayoutMainSection,
-  AppLayoutSidebar
+  AppLayoutMajorSection,
+  AppLayoutMinorSection,
+  AppLayoutTopSection
 } from "../../components/layout"
 
 import {
@@ -36,9 +38,9 @@ import {
   SIGN_IN_PAGE_URL
 } from "../../constants/page-urls"
 
-import { SideBar, TopLevelNavGroup } from "../../components/sidebar"
+import { SideBar, TopBar, TopLevelNavGroup } from "../../components/navigation"
 import { SITE_TITLE } from "../../constants/site-details"
-import { ChakraUIProvider, Fonts } from "../../controllers/chakra-ui"
+import { ChakraUIProvider, Colors, Fonts } from "../../controllers/chakra-ui"
 import { AccessPolicyTypes } from "../../controllers/policy"
 
 import * as queries from "../../graphql/queries"
@@ -54,7 +56,7 @@ function LessonCard({
   }
 }) {
   return (
-    <Card>
+    <Card borderRadius="2px">
       <CardHeader>
         <Heading
           as="h2"
@@ -66,20 +68,9 @@ function LessonCard({
         </Heading>
       </CardHeader>
 
-      <CardBody>
+      <CardBody pt="0">
         <Stack divider={<StackDivider />} spacing="4">
-          <Box>
-            <Heading
-              as="h3"
-              fontFamily={Fonts.body}
-              fontWeight="600"
-              fontSize="1.1rem"
-              mb="10px"
-            >
-              Description
-            </Heading>
-            <Text>{lesson.description}</Text>
-          </Box>
+          <Text color="gray.600">{lesson.description}</Text>
           <Box>
             <Flex gap="10px" flexWrap="wrap">
               {lesson.tags.map((tagLabel) => (
@@ -313,49 +304,51 @@ function AllLessonsView() {
   }, [lessonIsLoaded, attemptLessonLoad])
 
   return (
-    <Flex flexDir="column" minH="100vh" pb="20px">
-      <Heading as="h1" p="20px">
-        Lessons
-      </Heading>
+    <Box bg={Colors.almostWhite} minH="100%">
+      <Flex flexDir="column" maxW="1200px" pb="20px">
+        <Heading as="h1" mb={{ base: "0", md: "20px" }} p="20px">
+          Lessons
+        </Heading>
 
-      {/* eslint-disable-next-line no-nested-ternary */}
-      {lessonIsLoaded ? (
-        // Show empty lesson content if first lessons batch is empty (user has no
-        // lessons created)
-        lessonsSets[0].length > 0 ? (
-          <Box mt="20px" p="0 20px">
-            <SimpleGrid columns={2} spacing="20px">
-              {lessonsSets.map((lessonSet, index) => (
-                // eslint-disable-next-line react/no-array-index-key
-                <LessonSet lessons={lessonSet} key={index} />
-              ))}
-            </SimpleGrid>
+        {/* eslint-disable-next-line no-nested-ternary */}
+        {lessonIsLoaded ? (
+          // Show empty lesson content if first lessons batch is empty (user has no
+          // lessons created)
+          lessonsSets[0].length > 0 ? (
+            <Box p="0 20px">
+              <SimpleGrid columns={{ base: 1, sm: 2 }} spacing="20px">
+                {lessonsSets.map((lessonSet, index) => (
+                  // eslint-disable-next-line react/no-array-index-key
+                  <LessonSet lessons={lessonSet} key={index} />
+                ))}
+              </SimpleGrid>
 
-            {typeof lessonLoadingNextToken === "string" &&
-            lessonLoadingNextToken !== "" ? (
-              <Flex justifyContent="center" mt="40px">
-                <Button
-                  isLoading={isLoadingMoreLessons}
-                  onClick={loadMoreLessons}
-                >
-                  Load more
-                </Button>
-              </Flex>
-            ) : (
-              <Text color="gray.400" mt="40px" textAlign="center">
-                You have reached the end 🍿
-              </Text>
-            )}
-          </Box>
+              {typeof lessonLoadingNextToken === "string" &&
+              lessonLoadingNextToken !== "" ? (
+                <Flex justifyContent="center" mt="40px">
+                  <Button
+                    isLoading={isLoadingMoreLessons}
+                    onClick={loadMoreLessons}
+                  >
+                    Load more
+                  </Button>
+                </Flex>
+              ) : (
+                <Text color="gray.400" mt="40px" textAlign="center">
+                  You have reached the end 🍿
+                </Text>
+              )}
+            </Box>
+          ) : (
+            <EmptyLessonsContent />
+          )
         ) : (
-          <EmptyLessonsContent />
-        )
-      ) : (
-        <LessonLoadingContent
-          lessonLoadingErrorOccured={lessonLoadingErrorOccured}
-        />
-      )}
-    </Flex>
+          <LessonLoadingContent
+            lessonLoadingErrorOccured={lessonLoadingErrorOccured}
+          />
+        )}
+      </Flex>
+    </Box>
   )
 }
 
@@ -363,14 +356,19 @@ export default function AllLessons() {
   return (
     <ChakraUIProvider>
       <AppLayout pageTitle={`My Lessons | ${SITE_TITLE}`}>
-        <AppLayoutSidebar>
+        <AppLayoutMinorSection>
           <SideBar>
             <TopLevelNavGroup activeURL={ALL_LESSONS_URL} />
           </SideBar>
-        </AppLayoutSidebar>
-        <AppLayoutMainSection>
-          <AllLessonsView />
-        </AppLayoutMainSection>
+        </AppLayoutMinorSection>
+        <AppLayoutMajorSection>
+          <AppLayoutTopSection>
+            <TopBar />
+          </AppLayoutTopSection>
+          <AppLayoutMainSection>
+            <AllLessonsView />
+          </AppLayoutMainSection>
+        </AppLayoutMajorSection>
       </AppLayout>
     </ChakraUIProvider>
   )

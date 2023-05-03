@@ -34,16 +34,25 @@ import {
 
 import { API } from "aws-amplify"
 import { Step, Steps, useSteps } from "chakra-ui-steps"
-import { createContext, useContext, useEffect, useRef, useState } from "react"
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState
+} from "react"
 
 import { useRouter } from "next/router"
 import { PDFJS } from "../../lib/pdf"
 import {
   AppLayout,
-  AppLayoutSidebar,
+  AppLayoutMinorSection,
+  AppLayoutMajorSection,
+  AppLayoutTopSection,
   AppLayoutMainSection
 } from "../../components/layout"
-import { TopLevelNavGroup, SideBar } from "../../components/sidebar"
+import { TopLevelNavGroup, SideBar, TopBar } from "../../components/navigation"
 
 import {
   ADD_NEW_LESSON_URL,
@@ -73,7 +82,7 @@ const DEFAULT_NEW_LESSON_DATA = {
   tags: []
 }
 
-const NewLessonDataContext = createContext(DEFAULT_NEW_LESSON_DATA)
+const NewLessonDataContext = createContext({ ...DEFAULT_NEW_LESSON_DATA })
 
 const MAX_ACCEPTABLE_PDF_FILE_SIZE = 5 * 1e6 // (in bytes)
 const MIN_TAG_LABEL_CHAR_COUNT = 2
@@ -926,7 +935,7 @@ function LessonCreationSection() {
   }
 
   return (
-    <Box>
+    <Box pb="20px">
       <Heading as="h1" p="20px">
         Create New Lesson
       </Heading>
@@ -988,21 +997,29 @@ function LessonCreationSection() {
 }
 
 export default function NewLessonCreationPage() {
+  const newLessonDataContextValue = useMemo(
+    () => ({ ...DEFAULT_NEW_LESSON_DATA }),
+    []
+  )
+
   return (
     <ChakraUIProvider useSteps>
       <AppLayout pageTitle={`Create New Lesson | ${SITE_TITLE}`}>
-        <AppLayoutSidebar>
+        <AppLayoutMinorSection>
           <SideBar>
             <TopLevelNavGroup activeURL={ADD_NEW_LESSON_URL} />
           </SideBar>
-        </AppLayoutSidebar>
-        <AppLayoutMainSection>
-          <Box pb="20px">
-            <NewLessonDataContext.Provider value={DEFAULT_NEW_LESSON_DATA}>
+        </AppLayoutMinorSection>
+        <AppLayoutMajorSection>
+          <AppLayoutTopSection>
+            <TopBar />
+          </AppLayoutTopSection>
+          <AppLayoutMainSection>
+            <NewLessonDataContext.Provider value={newLessonDataContextValue}>
               <LessonCreationSection />
             </NewLessonDataContext.Provider>
-          </Box>
-        </AppLayoutMainSection>
+          </AppLayoutMainSection>
+        </AppLayoutMajorSection>
       </AppLayout>
     </ChakraUIProvider>
   )

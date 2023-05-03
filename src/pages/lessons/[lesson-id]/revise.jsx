@@ -25,15 +25,18 @@ import { BiBookReader } from "react-icons/bi"
 import {
   AppLayout,
   AppLayoutMainSection,
-  AppLayoutSidebar
+  AppLayoutMajorSection,
+  AppLayoutMinorSection,
+  AppLayoutTopSection
 } from "../../../components/layout"
 
 import {
   NavGroup,
   NavItem,
   SideBar,
+  TopBar,
   TopLevelNavGroup
-} from "../../../components/sidebar"
+} from "../../../components/navigation"
 
 import {
   LESSON_REVISION_URL,
@@ -378,7 +381,7 @@ export default function ReviseSpecificLesson() {
   return (
     <ChakraUIProvider>
       <AppLayout pageTitle={`Revise Lesson | ${SITE_TITLE}`}>
-        <AppLayoutSidebar>
+        <AppLayoutMinorSection>
           <SideBar>
             <TopLevelNavGroup />
             <NavGroup heading="Lesson Actions">
@@ -397,10 +400,15 @@ export default function ReviseSpecificLesson() {
               </NavItem>
             </NavGroup>
           </SideBar>
-        </AppLayoutSidebar>
-        <AppLayoutMainSection>
-          <LessonRevisionSection lessonManager={lessonManager} />
-        </AppLayoutMainSection>
+        </AppLayoutMinorSection>
+        <AppLayoutMajorSection>
+          <AppLayoutTopSection>
+            <TopBar />
+          </AppLayoutTopSection>
+          <AppLayoutMainSection>
+            <LessonRevisionSection lessonManager={lessonManager} />
+          </AppLayoutMainSection>
+        </AppLayoutMajorSection>
       </AppLayout>
     </ChakraUIProvider>
   )
