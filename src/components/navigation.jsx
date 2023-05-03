@@ -288,7 +288,8 @@ export function TopBar() {
         />
         <Box
           as="span"
-          color={{ base: "transparent", sm: "brand.primary" }}
+          color="brand.primary"
+          display={{ base: "none", sm: "block" }}
           fontFamily={Fonts.body}
           fontSize="1.45rem"
           fontWeight="500"
