@@ -30,7 +30,6 @@ export function AuthProvider({ children, placeholder }) {
           userIsAuthenticated: true,
           user: await Auth.currentAuthenticatedUser()
         })
-
         setIsCheckingForUser(false)
       } catch (error) {
         setIsCheckingForUser(false)
