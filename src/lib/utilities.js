@@ -11,11 +11,12 @@ export function countWords(value) {
 }
 
 export function getXSequentialValuesFrom(array, count, startIndex) {
-  if (!Array.isArray(array)) throw new TypeError("'array' must be an array")
-  if (!Number.isInteger(count))
-    throw new TypeError("'count' must be an integer")
-  if (!Number.isInteger(startIndex))
-    throw new TypeError("'startIndex' must be an integer")
+  if (!Array.isArray(array) || array.length < 1)
+    throw new TypeError("'array' must be a non-empty array")
+  if (!Number.isInteger(count) || count < 1)
+    throw new TypeError("'count' must be a positive integer")
+  if (!Number.isInteger(startIndex) || startIndex < 0)
+    throw new TypeError("'startIndex' must be a non-negative integer")
 
   const arrayLength = array.length
 
@@ -29,7 +30,7 @@ export function getXSequentialValuesFrom(array, count, startIndex) {
       "'startIndex' can not be greater than the index of the last item in 'array'"
     )
 
-  if (count === arrayLength) return array
+  if (count === arrayLength) return [...array]
 
   if (startIndex + count <= arrayLength)
     return array.slice(startIndex, startIndex + count)
