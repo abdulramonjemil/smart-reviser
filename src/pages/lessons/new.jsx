@@ -64,7 +64,7 @@ import { SITE_TITLE } from "../../constants/site-details"
 import { ChakraUIProvider } from "../../controllers/chakra-ui"
 import { AccessPolicyTypes } from "../../controllers/policy"
 import { uniqueId } from "../../lib/markup"
-import { countWords } from "../../lib/counter"
+import { countWords } from "../../lib/utilities"
 
 import {
   MAX_LESSON_CONTENT_CHAR_COUNT,
@@ -74,6 +74,7 @@ import {
 
 import * as queries from "../../graphql/queries"
 import * as mutations from "../../graphql/mutations"
+import { useAuth } from "../../controllers/auth"
 
 const DEFAULT_NEW_LESSON_DATA = {
   title: "",
@@ -686,6 +687,7 @@ function LessonCreationSection() {
   const [isCreatingLesson, setIsCreatingLesson] = useState(false)
   const [tagsAreSet, setTagsAreSet] = useState(false)
 
+  const { user: currentUser } = useAuth()
   const router = useRouter()
   const toast = useToast()
   const newLessonData = useContext(NewLessonDataContext)
@@ -695,6 +697,13 @@ function LessonCreationSection() {
 
   const indexOfHighestStep = 2
   const stepsCompletionData = [metadataIsSet, lessonSourceIsSet, tagsAreSet]
+
+  // As mentioned in the amplify docs, the default value for the owner field of
+  // models is the combination of the user sub and username
+  // Visit
+  // https://docs.amplify.aws/cli/graphql/authorization-rules/#per-user--owner-based-data-access
+  // to learn more
+  const owningKeyOfCurrentUser = `${currentUser.attributes.sub}::${currentUser.username}`
 
   async function createLessonInBackend(lessonData) {
     let lessonId = null
@@ -735,60 +744,48 @@ function LessonCreationSection() {
 
     let errorOccured = false
     let uncreatedTags = null
+    let idsOfAlreadyCreatedTags = []
 
     try {
-      const tagsFetchingResult = await Promise.all(
-        tagLabels.map((tagLabel) =>
-          API.graphql({
-            query: queries.getTag,
-            variables: { label: tagLabel }
-          })
-        )
-      )
-
-      const someResultContainErrors = tagsFetchingResult.some(
-        (result) => typeof result.errors === "object" && result.errors !== null
-      )
-      if (someResultContainErrors) throw new Error()
-
-      uncreatedTags = tagLabels.filter((tagLabel, index) => {
-        const resultForLabel = tagsFetchingResult[index]
-        return (
-          typeof resultForLabel.data.getTag !== "object" ||
-          resultForLabel.data.getTag === null
-        )
+      const userTagsFetchingResult = await API.graphql({
+        query: queries.tagsByOwner,
+        variables: { owner: owningKeyOfCurrentUser }
       })
 
+      const objectsForUserCreatedTags =
+        userTagsFetchingResult.data?.tagsByOwner?.items
+
+      const errorOccuredWhileFetchingTags =
+        (typeof userTagsFetchingResult.errors === "object" &&
+          userTagsFetchingResult.errors !== null) ||
+        !Array.isArray(objectsForUserCreatedTags)
+
+      if (errorOccuredWhileFetchingTags)
+        throw new Error("Error occured while fetching user tags")
+
+      const userTagsSet = new Set(
+        objectsForUserCreatedTags.map((tagObject) => tagObject.label)
+      )
+
+      idsOfAlreadyCreatedTags = objectsForUserCreatedTags.map(
+        (tagObject) => tagObject.id
+      )
+      uncreatedTags = tagLabels.filter((tagLabel) => !userTagsSet.has(tagLabel))
       if (uncreatedTags.length === 0) uncreatedTags = null
     } catch (error) {
       errorOccured = true
     }
 
-    return { uncreatedTags, errorOccured }
+    return { uncreatedTags, errorOccured, idsOfAlreadyCreatedTags }
   }
 
   async function createTagsInBackend(tagLabels) {
     if (!Array.isArray(tagLabels)) throw new Error()
     let errorOccured = false
+    let tagIds = []
 
-    /**
-     * When experimenting with this, it is noticed that amplify causes AppSync
-     * to error by returning `null` for the `lessons` field on
-     * `result.data.createTag`. This is most likely an issue with amplify
-     * codegen, and there's nothing that can be done from my end (as far as I
-     * know). Feel free to reach out if you know of the reason for the error.
-     * The exact error message starts with "Cannot return null for non-nullable
-     * type" which is what I'm going to be using here. Also, Promise.allSettled
-     * is used to make sure that all of the requests results are completed.
-     *
-     * So, instead of just checking the `errors` field of the result to
-     * determine if there's an error, I'll not consider the error if
-     * the `data` field's `createTag` field if it's not null, the `lessons`
-     * field on that is null, and there's just one error, and the message starts
-     * with "Cannot return null for non-nullable type".
-     */
     try {
-      const tagCreationSettledResults = await Promise.allSettled(
+      const tagCreationResults = await Promise.all(
         tagLabels.map((tagLabel) =>
           API.graphql({
             query: mutations.createTag,
@@ -797,49 +794,32 @@ function LessonCreationSection() {
         )
       )
 
-      const someResultContainErrors = tagCreationSettledResults.some(
-        (settledResult) => {
-          const result = settledResult.reason
-          const resultData = result.data
-          const resultErrors = result.errors
-
-          const isExpectedError =
-            settledResult.status === "rejected" &&
-            typeof resultData === "object" &&
-            resultData !== null &&
-            resultData.createTag.lessons === null &&
-            Array.isArray(resultErrors) &&
-            resultErrors.length === 1 &&
-            resultErrors[0].message?.startsWith(
-              "Cannot return null for non-nullable type"
-            )
-
-          return (
-            typeof resultErrors === "object" &&
-            resultErrors !== null &&
-            !isExpectedError
-          )
-        }
+      const someResultContainErrors = tagCreationResults.some(
+        (result) => typeof result.errors === "object" && result.errors !== null
       )
 
-      if (someResultContainErrors) throw tagCreationSettledResults
+      if (someResultContainErrors) {
+        throw tagCreationResults
+      }
+
+      tagIds = tagCreationResults.map((result) => result.data.createTag.id)
     } catch (error) {
       errorOccured = true
     }
 
-    return { errorOccured }
+    return { errorOccured, tagIds }
   }
 
-  async function createLessonTagsInBackend(lessonId, tagLabels) {
-    if (!Array.isArray(tagLabels)) throw new Error()
+  async function createLessonTagsRelationInBackend(lessonId, tagIds) {
+    if (!Array.isArray(tagIds)) throw new Error()
     let errorOccured = false
 
     try {
       const lessonTagsCreationResult = await Promise.all(
-        tagLabels.map((tagLabel) =>
+        tagIds.map((tagId) =>
           API.graphql({
             query: mutations.createLessonTags,
-            variables: { input: { lessonId, tagLabel } }
+            variables: { input: { lessonId, tagId } }
           })
         )
       )
@@ -848,7 +828,9 @@ function LessonCreationSection() {
         (result) => typeof result.errors === "object" && result.errors !== null
       )
 
-      if (someResultContainErrors) throw lessonTagsCreationResult
+      if (someResultContainErrors) {
+        throw lessonTagsCreationResult
+      }
     } catch (error) {
       errorOccured = true
     }
@@ -900,8 +882,9 @@ function LessonCreationSection() {
     }
 
     const { uncreatedTags } = uncreatedTagsRetrievalResult
+    let tagsCreationResult = null
     if (Array.isArray(uncreatedTags)) {
-      const tagsCreationResult = await createTagsInBackend(uncreatedTags)
+      tagsCreationResult = await createTagsInBackend(uncreatedTags)
       if (tagsCreationResult.errorOccured) {
         notifyUserOfLessonCreationError(lessonCreationToastId)
         setIsCreatingLesson(false)
@@ -909,10 +892,18 @@ function LessonCreationSection() {
       }
     }
 
-    const lessonTagsCreationResult = await createLessonTagsInBackend(
+    const idsOfNewlyCreatedTags =
+      tagsCreationResult !== null ? tagsCreationResult.tagIds : []
+    const idsOfLessonTags = [
+      ...uncreatedTagsRetrievalResult.idsOfAlreadyCreatedTags,
+      ...idsOfNewlyCreatedTags
+    ]
+
+    const lessonTagsCreationResult = await createLessonTagsRelationInBackend(
       lessonCreationResult.lessonId,
-      validTagLabels
+      idsOfLessonTags
     )
+
     if (lessonTagsCreationResult.errorOccured) {
       notifyUserOfLessonCreationError(lessonCreationToastId)
       setIsCreatingLesson(false)

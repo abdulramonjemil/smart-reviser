@@ -74,7 +74,7 @@ function QuizJSUtils() {
   )
 }
 
-function LessonDetails({ hideLessonContent }) {
+function LessonDetails() {
   const lesson = useLesson()
 
   return (
@@ -103,25 +103,23 @@ function LessonDetails({ hideLessonContent }) {
         <Text>{lesson.description}</Text>
       </Box>
 
-      {!hideLessonContent && (
-        <Box mb="20px">
-          <Heading
-            as="h2"
-            fontFamily={Fonts.body}
-            fontSize="1.1rem"
-            fontWeight="600"
-          >
-            Lesson Content
-          </Heading>
-          <Textarea
-            h="150px"
-            isDisabled
-            mt="10px"
-            _disabled={{ opacity: "1" }}
-            value={lesson.content}
-          />
-        </Box>
-      )}
+      <Box mb="20px">
+        <Heading
+          as="h2"
+          fontFamily={Fonts.body}
+          fontSize="1.1rem"
+          fontWeight="600"
+        >
+          Lesson Content
+        </Heading>
+        <Textarea
+          h="150px"
+          isDisabled
+          mt="10px"
+          _disabled={{ opacity: "1" }}
+          value={lesson.content}
+        />
+      </Box>
     </Box>
   )
 }
@@ -314,7 +312,7 @@ function LessonRevisionSection({ lessonManager }) {
       {!lessonManager.isLoading && !lessonManager.errorOccured && (
         <>
           <LessonContext.Provider value={lessonManager.lesson}>
-            <LessonDetails hideLessonContent={quizIsStarted} />
+            <LessonDetails />
           </LessonContext.Provider>
           <FormControl
             borderColor="gray.300"

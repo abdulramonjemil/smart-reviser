@@ -16,7 +16,7 @@ export const onCreateLesson = /* GraphQL */ `
         items {
           id
           lessonId
-          tagLabel
+          tagId
           createdAt
           updatedAt
           owner
@@ -43,7 +43,7 @@ export const onUpdateLesson = /* GraphQL */ `
         items {
           id
           lessonId
-          tagLabel
+          tagId
           createdAt
           updatedAt
           owner
@@ -70,7 +70,7 @@ export const onDeleteLesson = /* GraphQL */ `
         items {
           id
           lessonId
-          tagLabel
+          tagId
           createdAt
           updatedAt
           owner
@@ -88,21 +88,22 @@ export const onCreateTag = /* GraphQL */ `
     $owner: String
   ) {
     onCreateTag(filter: $filter, owner: $owner) {
+      id
       label
       lessons {
         items {
           id
           lessonId
-          tagLabel
+          tagId
           createdAt
           updatedAt
           owner
         }
         nextToken
       }
+      owner
       createdAt
       updatedAt
-      owner
     }
   }
 `;
@@ -112,21 +113,22 @@ export const onUpdateTag = /* GraphQL */ `
     $owner: String
   ) {
     onUpdateTag(filter: $filter, owner: $owner) {
+      id
       label
       lessons {
         items {
           id
           lessonId
-          tagLabel
+          tagId
           createdAt
           updatedAt
           owner
         }
         nextToken
       }
+      owner
       createdAt
       updatedAt
-      owner
     }
   }
 `;
@@ -136,21 +138,22 @@ export const onDeleteTag = /* GraphQL */ `
     $owner: String
   ) {
     onDeleteTag(filter: $filter, owner: $owner) {
+      id
       label
       lessons {
         items {
           id
           lessonId
-          tagLabel
+          tagId
           createdAt
           updatedAt
           owner
         }
         nextToken
       }
+      owner
       createdAt
       updatedAt
-      owner
     }
   }
 `;
@@ -162,7 +165,7 @@ export const onCreateLessonTags = /* GraphQL */ `
     onCreateLessonTags(filter: $filter, owner: $owner) {
       id
       lessonId
-      tagLabel
+      tagId
       lesson {
         id
         title
@@ -176,13 +179,14 @@ export const onCreateLessonTags = /* GraphQL */ `
         updatedAt
       }
       tag {
+        id
         label
         lessons {
           nextToken
         }
+        owner
         createdAt
         updatedAt
-        owner
       }
       createdAt
       updatedAt
@@ -198,7 +202,7 @@ export const onUpdateLessonTags = /* GraphQL */ `
     onUpdateLessonTags(filter: $filter, owner: $owner) {
       id
       lessonId
-      tagLabel
+      tagId
       lesson {
         id
         title
@@ -212,13 +216,14 @@ export const onUpdateLessonTags = /* GraphQL */ `
         updatedAt
       }
       tag {
+        id
         label
         lessons {
           nextToken
         }
+        owner
         createdAt
         updatedAt
-        owner
       }
       createdAt
       updatedAt
@@ -234,7 +239,7 @@ export const onDeleteLessonTags = /* GraphQL */ `
     onDeleteLessonTags(filter: $filter, owner: $owner) {
       id
       lessonId
-      tagLabel
+      tagId
       lesson {
         id
         title
@@ -248,13 +253,14 @@ export const onDeleteLessonTags = /* GraphQL */ `
         updatedAt
       }
       tag {
+        id
         label
         lessons {
           nextToken
         }
+        owner
         createdAt
         updatedAt
-        owner
       }
       createdAt
       updatedAt

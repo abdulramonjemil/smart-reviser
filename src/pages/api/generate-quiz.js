@@ -3,7 +3,7 @@ import MindsDB from "mindsdb-js-sdk"
 import mysql from "mysql"
 
 import * as queries from "../../graphql/queries"
-import { countWords } from "../../lib/counter"
+import { countWords, getXRandomSequentialValuesFrom } from "../../lib/utilities"
 import {
   HIGHEST_MAX_QUESTIONS_COUNT_PER_PROMPT,
   isValidQuizDetails,
@@ -14,7 +14,7 @@ import {
   toUsablePromptChunks
 } from "../../lib/lesson-quiz"
 
-export default async function handler(req, res) {
+export default async function quizGenerationHandler(req, res) {
   const SSR = withSSRContext({ req })
 
   if (req.method !== "GET") {
@@ -109,7 +109,7 @@ export default async function handler(req, res) {
   }
 
   let questionsCountPerPrompt = 0
-  let numberOfPromptChunksToUse = chunksToUseInPrompts.length
+  let numberOfPromptChunksToUse = 0
 
   if (maxQuestionsCount >= chunksToUseInPrompts.length) {
     const potentialHighestQuestionsCountPerPrompt = Math.floor(
@@ -121,6 +121,7 @@ export default async function handler(req, res) {
       HIGHEST_MAX_QUESTIONS_COUNT_PER_PROMPT
         ? potentialHighestQuestionsCountPerPrompt
         : HIGHEST_MAX_QUESTIONS_COUNT_PER_PROMPT
+    numberOfPromptChunksToUse = chunksToUseInPrompts.length
   } else {
     questionsCountPerPrompt = 1
     numberOfPromptChunksToUse = maxQuestionsCount
@@ -135,10 +136,13 @@ export default async function handler(req, res) {
       )}`
   )
 
-  const quizGenerationQueries = quizGenerationQueriesAlt.slice(
-    0,
-    numberOfPromptChunksToUse
-  )
+  const quizGenerationQueries =
+    quizGenerationQueriesAlt.length <= numberOfPromptChunksToUse
+      ? quizGenerationQueriesAlt
+      : getXRandomSequentialValuesFrom(
+          quizGenerationQueriesAlt,
+          numberOfPromptChunksToUse
+        )
 
   let errorOccuredWhileConnectingWithMindsDB = false
 
@@ -210,13 +214,19 @@ export default async function handler(req, res) {
       (quizDetailsString) => JSON.parse(quizDetailsString)
     )
 
-    const finalQuizDetailsArray = quizDetailsObjectsArray.reduce(
+    let finalQuizDetailsArray = quizDetailsObjectsArray.reduce(
       (questionsArray, currentValue) => [
         ...questionsArray,
         ...currentValue.quizDetails
       ],
       []
     )
+
+    if (finalQuizDetailsArray.length > maxQuestionsCount)
+      finalQuizDetailsArray = getXRandomSequentialValuesFrom(
+        finalQuizDetailsArray,
+        maxQuestionsCount
+      )
 
     singleQuizDetailsObjectToUse = { quizDetails: finalQuizDetailsArray }
   } catch (error) {

@@ -16,10 +16,18 @@ export function useLessonManager() {
       const lessonId = router.query["lesson-id"]
 
       try {
-        const lessonFetchingResult = await API.graphql({
-          query: queries.getLesson,
-          variables: { id: lessonId }
-        })
+        const [lessonFetchingResult, lessonTagsFetchingResult] =
+          await Promise.all([
+            API.graphql({
+              query: queries.getLesson,
+              variables: { id: lessonId }
+            }),
+
+            API.graphql({
+              query: queries.lessonTagsByLessonId,
+              variables: { lessonId }
+            })
+          ])
 
         if (
           typeof lessonFetchingResult.errors === "object" &&
@@ -28,14 +36,21 @@ export function useLessonManager() {
           throw lessonFetchingResult
         }
 
+        if (
+          typeof lessonTagsFetchingResult.errors === "object" &&
+          lessonTagsFetchingResult.errors !== null
+        ) {
+          throw lessonTagsFetchingResult
+        }
+
         const lessonsTagsLabels =
-          lessonFetchingResult.data.getLesson.tags.items.map(
-            (tagObject) => tagObject.tagLabel
+          lessonTagsFetchingResult.data.lessonTagsByLessonId.items.map(
+            (lessonTagObject) => lessonTagObject.tag.label
           )
 
         const lessonToUse = lessonFetchingResult.data.getLesson || null
         if (lessonToUse !== null) lessonToUse.tags = lessonsTagsLabels
-        setLesson(lessonToUse || null)
+        setLesson(lessonToUse)
       } catch (error) {
         setErrorOccured(true)
       }
@@ -46,5 +61,12 @@ export function useLessonManager() {
   return { errorOccured, isLoading, lesson, routerQuery: router.query }
 }
 
-export const LessonContext = createContext({})
+export const LessonContext = createContext({
+  id: "",
+  title: "",
+  description: "",
+  content: "",
+  tags: []
+})
+
 export const useLesson = () => useContext(LessonContext)

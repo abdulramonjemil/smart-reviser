@@ -1,4 +1,4 @@
-import { countWords } from "./counter"
+import { countWords } from "./utilities"
 
 export const QUIZ_GENERATION_PARAMS = {
   LESSON_ID: "lesson_id",

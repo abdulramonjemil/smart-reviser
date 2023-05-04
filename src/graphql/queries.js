@@ -13,7 +13,7 @@ export const getLesson = /* GraphQL */ `
         items {
           id
           lessonId
-          tagLabel
+          tagId
           createdAt
           updatedAt
           owner
@@ -49,49 +49,43 @@ export const listLessons = /* GraphQL */ `
   }
 `;
 export const getTag = /* GraphQL */ `
-  query GetTag($label: String!) {
-    getTag(label: $label) {
+  query GetTag($id: ID!) {
+    getTag(id: $id) {
+      id
       label
       lessons {
         items {
           id
           lessonId
-          tagLabel
+          tagId
           createdAt
           updatedAt
           owner
         }
         nextToken
       }
+      owner
       createdAt
       updatedAt
-      owner
     }
   }
 `;
 export const listTags = /* GraphQL */ `
   query ListTags(
-    $label: String
     $filter: ModelTagFilterInput
     $limit: Int
     $nextToken: String
-    $sortDirection: ModelSortDirection
   ) {
-    listTags(
-      label: $label
-      filter: $filter
-      limit: $limit
-      nextToken: $nextToken
-      sortDirection: $sortDirection
-    ) {
+    listTags(filter: $filter, limit: $limit, nextToken: $nextToken) {
       items {
+        id
         label
         lessons {
           nextToken
         }
+        owner
         createdAt
         updatedAt
-        owner
       }
       nextToken
     }
@@ -102,7 +96,7 @@ export const getLessonTags = /* GraphQL */ `
     getLessonTags(id: $id) {
       id
       lessonId
-      tagLabel
+      tagId
       lesson {
         id
         title
@@ -116,13 +110,14 @@ export const getLessonTags = /* GraphQL */ `
         updatedAt
       }
       tag {
+        id
         label
         lessons {
           nextToken
         }
+        owner
         createdAt
         updatedAt
-        owner
       }
       createdAt
       updatedAt
@@ -140,7 +135,7 @@ export const listLessonTags = /* GraphQL */ `
       items {
         id
         lessonId
-        tagLabel
+        tagId
         lesson {
           id
           title
@@ -151,14 +146,75 @@ export const listLessonTags = /* GraphQL */ `
           updatedAt
         }
         tag {
+          id
           label
+          owner
           createdAt
           updatedAt
-          owner
         }
         createdAt
         updatedAt
         owner
+      }
+      nextToken
+    }
+  }
+`;
+export const lessonsByOwner = /* GraphQL */ `
+  query LessonsByOwner(
+    $owner: String!
+    $sortDirection: ModelSortDirection
+    $filter: ModelLessonFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    lessonsByOwner(
+      owner: $owner
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        title
+        description
+        content
+        owner
+        tags {
+          nextToken
+        }
+        createdAt
+        updatedAt
+      }
+      nextToken
+    }
+  }
+`;
+export const tagsByOwner = /* GraphQL */ `
+  query TagsByOwner(
+    $owner: String!
+    $sortDirection: ModelSortDirection
+    $filter: ModelTagFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    tagsByOwner(
+      owner: $owner
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        label
+        lessons {
+          nextToken
+        }
+        owner
+        createdAt
+        updatedAt
       }
       nextToken
     }
@@ -182,7 +238,7 @@ export const lessonTagsByLessonId = /* GraphQL */ `
       items {
         id
         lessonId
-        tagLabel
+        tagId
         lesson {
           id
           title
@@ -193,10 +249,11 @@ export const lessonTagsByLessonId = /* GraphQL */ `
           updatedAt
         }
         tag {
+          id
           label
+          owner
           createdAt
           updatedAt
-          owner
         }
         createdAt
         updatedAt
@@ -206,16 +263,16 @@ export const lessonTagsByLessonId = /* GraphQL */ `
     }
   }
 `;
-export const lessonTagsByTagLabel = /* GraphQL */ `
-  query LessonTagsByTagLabel(
-    $tagLabel: String!
+export const lessonTagsByTagId = /* GraphQL */ `
+  query LessonTagsByTagId(
+    $tagId: ID!
     $sortDirection: ModelSortDirection
     $filter: ModelLessonTagsFilterInput
     $limit: Int
     $nextToken: String
   ) {
-    lessonTagsByTagLabel(
-      tagLabel: $tagLabel
+    lessonTagsByTagId(
+      tagId: $tagId
       sortDirection: $sortDirection
       filter: $filter
       limit: $limit
@@ -224,7 +281,7 @@ export const lessonTagsByTagLabel = /* GraphQL */ `
       items {
         id
         lessonId
-        tagLabel
+        tagId
         lesson {
           id
           title
@@ -235,10 +292,11 @@ export const lessonTagsByTagLabel = /* GraphQL */ `
           updatedAt
         }
         tag {
+          id
           label
+          owner
           createdAt
           updatedAt
-          owner
         }
         createdAt
         updatedAt

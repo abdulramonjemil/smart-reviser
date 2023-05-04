@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { Link } from "@chakra-ui/next-js"
 import { GiEmptyWoodBucketHandle } from "react-icons/gi"
 
@@ -44,15 +44,16 @@ import { ChakraUIProvider, Colors, Fonts } from "../../controllers/chakra-ui"
 import { AccessPolicyTypes } from "../../controllers/policy"
 
 import * as queries from "../../graphql/queries"
+import { useAuth } from "../../controllers/auth"
 
 const NUMBER_OF_LESSONS_TO_LOAD_EACH_TIME = 20
 
 function LessonCard({
   lesson = {
-    id: 0,
-    title: "Some lesson title",
-    description: "Some lesson description",
-    tags: ["a-tag", "another-tag", "another-one"]
+    id: "",
+    title: "",
+    description: "",
+    tags: []
   }
 }) {
   return (
@@ -170,24 +171,33 @@ function AllLessonsView() {
   const [lessonLoadingErrorOccured, setLessonLoadingErrorOccured] =
     useState(false)
 
+  // As mentioned in the amplify docs, the default value for the owner field of
+  // models is the combination of the user sub and username
+  // Visit
+  // https://docs.amplify.aws/cli/graphql/authorization-rules/#per-user--owner-based-data-access
+  // to learn more
+  const { user: currentUser } = useAuth()
   const toast = useToast()
+
+  const owningKeyOfCurrentUser = `${currentUser.attributes.sub}::${currentUser.username}`
 
   async function loadAppropriateLessonBatch(nextToken) {
     let errorOccured = false
     let lessonItems = null
 
     try {
-      const lessonLoadingVariables = {
-        limit: NUMBER_OF_LESSONS_TO_LOAD_EACH_TIME
+      const userLessonsFetchingVariables = {
+        limit: NUMBER_OF_LESSONS_TO_LOAD_EACH_TIME,
+        owner: owningKeyOfCurrentUser
       }
 
       if (typeof nextToken === "string" && nextToken !== "") {
-        lessonLoadingVariables.nextToken = nextToken
+        userLessonsFetchingVariables.nextToken = nextToken
       }
 
       const lessonsLoadingResult = await API.graphql({
-        query: queries.listLessons,
-        variables: lessonLoadingVariables
+        query: queries.lessonsByOwner,
+        variables: userLessonsFetchingVariables
       })
 
       if (
@@ -197,8 +207,8 @@ function AllLessonsView() {
         throw lessonsLoadingResult
       }
 
-      lessonItems = lessonsLoadingResult.data.listLessons.items
-      nextToken = lessonsLoadingResult.data.listLessons.nextToken
+      lessonItems = lessonsLoadingResult.data.lessonsByOwner.items
+      nextToken = lessonsLoadingResult.data.lessonsByOwner.nextToken
     } catch (error) {
       errorOccured = true
     }
@@ -216,24 +226,25 @@ function AllLessonsView() {
     let lessonsTagsLabels = null
 
     try {
-      const lessonsFetchingResults = await Promise.all(
+      const lessonTagsFetchingResults = await Promise.all(
         lessonIds.map((lessonId) =>
           API.graphql({
-            query: queries.getLesson,
-            variables: { id: lessonId }
+            query: queries.lessonTagsByLessonId,
+            variables: { lessonId }
           })
         )
       )
 
-      if (
-        typeof lessonsFetchingResults.errors === "object" &&
-        lessonsFetchingResults.errors !== null
-      ) {
-        throw lessonsFetchingResults
-      }
+      const someResultContainErrors = lessonTagsFetchingResults.some(
+        (result) => typeof result.errors === "object" && result.errors !== null
+      )
 
-      lessonsTagsLabels = lessonsFetchingResults.map((result) =>
-        result.data.getLesson.tags.items.map((tagObject) => tagObject.tagLabel)
+      if (someResultContainErrors) throw lessonTagsFetchingResults
+
+      lessonsTagsLabels = lessonTagsFetchingResults.map((result) =>
+        result.data.lessonTagsByLessonId.items.map(
+          (lessonTagObject) => lessonTagObject.tag.label
+        )
       )
     } catch (error) {
       errorOccured = true
@@ -242,46 +253,43 @@ function AllLessonsView() {
     return { errorOccured, lessonsTagsLabels }
   }
 
-  const notifyUserOfLessonLoadingError = useCallback(() => {
+  function notifyUserOfLessonLoadingError() {
     toast({
-      title: "Failed to create lesson",
-      description: "An error occured while creating the lesson",
+      title: "Failed to load lesson",
+      description: "An error occured while loading lessons",
       status: "error",
       duration: 5000,
       isClosable: true
     })
-  }, [toast])
+  }
 
-  const attemptLessonLoad = useCallback(
-    async (nextToken) => {
-      const lessonsLoadingResult = await loadAppropriateLessonBatch(nextToken)
-      if (lessonsLoadingResult.errorOccured) {
-        setLessonLoadingErrorOccured(true)
-        notifyUserOfLessonLoadingError()
-        return { errorOccured: true, loadedLessons: null }
-      }
+  async function attemptLessonLoad(nextToken) {
+    const lessonsLoadingResult = await loadAppropriateLessonBatch(nextToken)
+    if (lessonsLoadingResult.errorOccured) {
+      setLessonLoadingErrorOccured(true)
+      notifyUserOfLessonLoadingError()
+      return { errorOccured: true, loadedLessons: null }
+    }
 
-      setLessonLoadingNextToken(lessonsLoadingResult.nextToken || null)
-      const loadedLessons = lessonsLoadingResult.lessons
+    setLessonLoadingNextToken(lessonsLoadingResult.nextToken || null)
+    const loadedLessons = lessonsLoadingResult.lessons
 
-      const lessonsTagsLabelsLoadingResult = await fetchLessonsTagsFromBackend(
-        loadedLessons.map((lesson) => lesson.id)
-      )
+    const lessonsTagsLabelsLoadingResult = await fetchLessonsTagsFromBackend(
+      loadedLessons.map((lesson) => lesson.id)
+    )
 
-      if (lessonsTagsLabelsLoadingResult.errorOccured) {
-        setLessonLoadingErrorOccured(true)
-        notifyUserOfLessonLoadingError()
-        return { errorOccured: true, loadedLessons: null }
-      }
+    if (lessonsTagsLabelsLoadingResult.errorOccured) {
+      setLessonLoadingErrorOccured(true)
+      notifyUserOfLessonLoadingError()
+      return { errorOccured: true, loadedLessons: null }
+    }
 
-      loadedLessons.forEach((lesson, index) => {
-        lesson.tags = lessonsTagsLabelsLoadingResult.lessonsTagsLabels[index]
-      })
+    loadedLessons.forEach((lesson, index) => {
+      lesson.tags = lessonsTagsLabelsLoadingResult.lessonsTagsLabels[index]
+    })
 
-      return { errorOccured: false, loadedLessons }
-    },
-    [notifyUserOfLessonLoadingError]
-  )
+    return { errorOccured: false, loadedLessons }
+  }
 
   async function loadMoreLessons() {
     setIsLoadingMoreLessons(true)
@@ -301,54 +309,58 @@ function AllLessonsView() {
       setLessonsSets([loadedLessonResult.loadedLessons])
       setLessonIsLoaded(true)
     })()
-  }, [lessonIsLoaded, attemptLessonLoad])
+  })
 
   return (
-    <Box bg={Colors.almostWhite} minH="100%">
-      <Flex flexDir="column" maxW="1200px" pb="20px">
-        <Heading as="h1" mb={{ base: "0", md: "20px" }} p="20px">
-          Lessons
-        </Heading>
+    <Flex
+      bg={Colors.almostWhite}
+      flexDir="column"
+      maxW="1200px"
+      pb="20px"
+      minH="100%"
+    >
+      <Heading as="h1" mb={{ base: "0", md: "20px" }} p="20px">
+        Lessons
+      </Heading>
 
-        {/* eslint-disable-next-line no-nested-ternary */}
-        {lessonIsLoaded ? (
-          // Show empty lesson content if first lessons batch is empty (user has no
-          // lessons created)
-          lessonsSets[0].length > 0 ? (
-            <Box p="0 20px">
-              <SimpleGrid columns={{ base: 1, sm: 2 }} spacing="20px">
-                {lessonsSets.map((lessonSet, index) => (
-                  // eslint-disable-next-line react/no-array-index-key
-                  <LessonSet lessons={lessonSet} key={index} />
-                ))}
-              </SimpleGrid>
+      {/* eslint-disable-next-line no-nested-ternary */}
+      {lessonIsLoaded ? (
+        // Show empty lesson content if first lessons batch is empty (user has no
+        // lessons created)
+        lessonsSets[0].length > 0 ? (
+          <Box p="0 20px">
+            <SimpleGrid columns={{ base: 1, sm: 2 }} spacing="20px">
+              {lessonsSets.map((lessonSet, index) => (
+                // eslint-disable-next-line react/no-array-index-key
+                <LessonSet lessons={lessonSet} key={index} />
+              ))}
+            </SimpleGrid>
 
-              {typeof lessonLoadingNextToken === "string" &&
-              lessonLoadingNextToken !== "" ? (
-                <Flex justifyContent="center" mt="40px">
-                  <Button
-                    isLoading={isLoadingMoreLessons}
-                    onClick={loadMoreLessons}
-                  >
-                    Load more
-                  </Button>
-                </Flex>
-              ) : (
-                <Text color="gray.400" mt="40px" textAlign="center">
-                  You have reached the end 🍿
-                </Text>
-              )}
-            </Box>
-          ) : (
-            <EmptyLessonsContent />
-          )
+            {typeof lessonLoadingNextToken === "string" &&
+            lessonLoadingNextToken !== "" ? (
+              <Flex justifyContent="center" mt="40px">
+                <Button
+                  isLoading={isLoadingMoreLessons}
+                  onClick={loadMoreLessons}
+                >
+                  Load more
+                </Button>
+              </Flex>
+            ) : (
+              <Text color="gray.400" mt="40px" textAlign="center">
+                You have reached the end 🍿
+              </Text>
+            )}
+          </Box>
         ) : (
-          <LessonLoadingContent
-            lessonLoadingErrorOccured={lessonLoadingErrorOccured}
-          />
-        )}
-      </Flex>
-    </Box>
+          <EmptyLessonsContent />
+        )
+      ) : (
+        <LessonLoadingContent
+          lessonLoadingErrorOccured={lessonLoadingErrorOccured}
+        />
+      )}
+    </Flex>
   )
 }
 

@@ -15,14 +15,14 @@
       "auth": {
         "smartrevisera64c8946a64c8946": {}
       },
-      "api": {
-        "smartreviser": {}
-      },
       "hosting": {
         "amplifyhosting": {
           "appId": "d3vlyuctihqwy1",
           "type": "cicd"
         }
+      },
+      "api": {
+        "smartreviser": {}
       }
     }
   }
