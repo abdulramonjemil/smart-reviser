@@ -31,7 +31,7 @@ import {
 } from "../constants/page-urls"
 import { SITE_TITLE } from "../constants/site-details"
 import { useLastAuth } from "../controllers/auth"
-import { Fonts } from "../controllers/chakra-ui"
+import { Fonts } from "../controllers/style"
 import {
   AccessPolicyTypes,
   useAccessPolicyManager
@@ -290,9 +290,9 @@ export function TopBar() {
           as="span"
           color="brand.primary"
           display={{ base: "none", sm: "block" }}
-          fontFamily={Fonts.body}
-          fontSize="1.45rem"
-          fontWeight="500"
+          fontFamily={Fonts.heading}
+          fontSize="1.6rem"
+          fontWeight="600"
         >
           {SITE_TITLE}
         </Box>

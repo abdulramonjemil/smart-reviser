@@ -130,7 +130,7 @@ export function AppLayoutTopSection({ children }) {
 
 export function AppLayoutMainSection({ children }) {
   return (
-    <Box bg="white" flex="1 1 200px" overflow="auto">
+    <Box bg="blackAlpha.200" flex="1 1 200px" overflow="auto">
       {children}
     </Box>
   )

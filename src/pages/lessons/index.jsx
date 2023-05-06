@@ -40,7 +40,7 @@ import {
 
 import { SideBar, TopBar, TopLevelNavGroup } from "../../components/navigation"
 import { SITE_TITLE } from "../../constants/site-details"
-import { ChakraUIProvider, Colors, Fonts } from "../../controllers/chakra-ui"
+import { ChakraUIProvider, Constants, Fonts } from "../../controllers/style"
 import { AccessPolicyTypes } from "../../controllers/policy"
 
 import * as queries from "../../graphql/queries"
@@ -57,7 +57,7 @@ function LessonCard({
   }
 }) {
   return (
-    <Card borderRadius="2px">
+    <Card>
       <CardHeader>
         <Heading
           as="h2"
@@ -90,7 +90,7 @@ function LessonCard({
           <Box mt="10px">
             <Link
               bg="gray.100"
-              borderRadius="6px"
+              borderRadius={Constants.borderRadius}
               fontWeight="600"
               href={LESSON_REVISION_URL.for(lesson.id)}
               p="10px 20px"
@@ -312,13 +312,7 @@ function AllLessonsView() {
   })
 
   return (
-    <Flex
-      bg={Colors.almostWhite}
-      flexDir="column"
-      maxW="1200px"
-      pb="20px"
-      minH="100%"
-    >
+    <Flex flexDir="column" maxW="1200px" pb="20px" minH="100%">
       <Heading as="h1" mb={{ base: "0", md: "20px" }} p="20px">
         Lessons
       </Heading>

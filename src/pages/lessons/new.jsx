@@ -14,12 +14,17 @@ import {
   FormLabel,
   Heading,
   Input,
+  NumberDecrementStepper,
+  NumberIncrementStepper,
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
   RangeSlider,
   RangeSliderFilledTrack,
   RangeSliderThumb,
   RangeSliderTrack,
+  SimpleGrid,
   Stat,
-  StatGroup,
   StatHelpText,
   StatLabel,
   StatNumber,
@@ -28,8 +33,8 @@ import {
   TagCloseButton,
   TagLabel,
   Textarea,
-  useToast,
-  VStack
+  useBreakpointValue,
+  useToast
 } from "@chakra-ui/react"
 
 import { API } from "aws-amplify"
@@ -44,6 +49,8 @@ import {
 } from "react"
 
 import { useRouter } from "next/router"
+import { BiCheck } from "react-icons/bi"
+
 import { PDFJS } from "../../lib/pdf"
 import {
   AppLayout,
@@ -61,7 +68,7 @@ import {
 } from "../../constants/page-urls"
 
 import { SITE_TITLE } from "../../constants/site-details"
-import { ChakraUIProvider } from "../../controllers/chakra-ui"
+import { ChakraUIProvider, Fonts } from "../../controllers/style"
 import { AccessPolicyTypes } from "../../controllers/policy"
 import { uniqueId } from "../../lib/markup"
 import { countWords } from "../../lib/utilities"
@@ -75,6 +82,7 @@ import {
 import * as queries from "../../graphql/queries"
 import * as mutations from "../../graphql/mutations"
 import { useAuth } from "../../controllers/auth"
+import { throttleWithAnimationFrame } from "../../lib/rendering"
 
 const DEFAULT_NEW_LESSON_DATA = {
   title: "",
@@ -125,8 +133,11 @@ function LessonMetadata({ setLevelIsCompleted }) {
   const lessonDescId = uniqueId("lesson-desc")
 
   return (
-    <Box maxW="600px" mt="20px">
-      <VStack spacing="25px">
+    // The padding here is added because a parent of this component uses
+    // chakra-collapse which has overflow:"hidden" set on it)
+    // This padding is to enable visibility of outlines
+    <Box mt="20px" p="2px">
+      <Flex flexDir="column" gap="25px">
         <FormControl
           isInvalid={titleInput.length !== 0 && !titleInputIsValid}
           isRequired
@@ -141,9 +152,11 @@ function LessonMetadata({ setLevelIsCompleted }) {
             value={titleInput}
           />
           {titleInput.length === 0 || titleInputIsValid ? (
-            <FormHelperText>Enter a short title for the lesson</FormHelperText>
+            <FormHelperText textAlign="left">
+              Enter a short title for the lesson
+            </FormHelperText>
           ) : (
-            <FormErrorMessage>
+            <FormErrorMessage textAlign="left">
               Lesson title must be at least 10 characters long
             </FormErrorMessage>
           )}
@@ -164,14 +177,16 @@ function LessonMetadata({ setLevelIsCompleted }) {
           />
 
           {descInput.length === 0 || descInputIsValid ? (
-            <FormHelperText>Describe the lesson briefly</FormHelperText>
+            <FormHelperText textAlign="left">
+              Describe the lesson briefly
+            </FormHelperText>
           ) : (
-            <FormErrorMessage>
+            <FormErrorMessage textAlign="left">
               Lesson description must be at least 20 characters long
             </FormErrorMessage>
           )}
         </FormControl>
-      </VStack>
+      </Flex>
     </Box>
   )
 }
@@ -246,7 +261,6 @@ function PDFPagesParsingManager({
     <Box>
       <Stat
         borderColor="blackAlpha.200"
-        borderRadius="4px"
         borderStyle="solid"
         borderWidth="1px"
         mb="20px"
@@ -264,8 +278,8 @@ function PDFPagesParsingManager({
         as="div"
         fontFamily="fonts.body"
         fontSize="md"
-        mb="20px"
         fontWeight="500"
+        mb="20px"
       >
         Select pages to use
       </Heading>
@@ -274,13 +288,16 @@ function PDFPagesParsingManager({
         // eslint-disable-next-line jsx-a11y/aria-proptypes
         aria-label={["page to start from", "page to end at"]}
         colorScheme="purple"
-        defaultValue={PDFFlowData.pagesRangeToParse}
+        value={PDFFlowData.pagesRangeToParse}
         max={PDFFlowData.parsedPDFDocument.numPages}
         mb="20px"
         min={1}
-        onChange={(value) => {
-          setPDFFlowData({ ...PDFFlowData, pagesRangeToParse: value })
-        }}
+        onChange={throttleWithAnimationFrame((value) => {
+          setPDFFlowData({
+            ...PDFFlowData,
+            pagesRangeToParse: value.map((val) => Number(val))
+          })
+        })}
         step={1}
       >
         <RangeSliderTrack>
@@ -290,23 +307,71 @@ function PDFPagesParsingManager({
         <RangeSliderThumb index={1} />
       </RangeSlider>
 
-      <StatGroup mb="20px">
-        <Stat>
-          <StatLabel>Start Page</StatLabel>
-          <StatNumber>{PDFFlowData.pagesRangeToParse[0]}</StatNumber>
-        </Stat>
+      <SimpleGrid columns={2} mb="20px">
+        <FormControl>
+          <FormLabel fontSize=".9rem" fontWeight="500">
+            Start page
+          </FormLabel>
+          <NumberInput
+            value={PDFFlowData.pagesRangeToParse[0]}
+            min={1}
+            minW="100px"
+            max={PDFFlowData.pagesRangeToParse[1]}
+            onChange={throttleWithAnimationFrame((value) => {
+              setPDFFlowData({
+                ...PDFFlowData,
+                pagesRangeToParse: [
+                  Number(value),
+                  PDFFlowData.pagesRangeToParse[1]
+                ]
+              })
+            })}
+            step={1}
+            w="75%"
+          >
+            <NumberInputField />
+            <NumberInputStepper>
+              <NumberIncrementStepper />
+              <NumberDecrementStepper />
+            </NumberInputStepper>
+          </NumberInput>
+        </FormControl>
 
-        <Stat>
-          <StatLabel>End page</StatLabel>
-          <StatNumber>{PDFFlowData.pagesRangeToParse[1]}</StatNumber>
-        </Stat>
-      </StatGroup>
+        <FormControl>
+          <FormLabel fontSize=".9rem" fontWeight="500">
+            End page
+          </FormLabel>
+          <NumberInput
+            value={PDFFlowData.pagesRangeToParse[1]}
+            min={PDFFlowData.pagesRangeToParse[0]}
+            minW="100px"
+            max={PDFFlowData.parsedPDFDocument.numPages}
+            onChange={throttleWithAnimationFrame((value) => {
+              setPDFFlowData({
+                ...PDFFlowData,
+                pagesRangeToParse: [
+                  PDFFlowData.pagesRangeToParse[0],
+                  Number(value)
+                ]
+              })
+            })}
+            step={1}
+            w="75%"
+          >
+            <NumberInputField />
+            <NumberInputStepper>
+              <NumberIncrementStepper />
+              <NumberDecrementStepper />
+            </NumberInputStepper>
+          </NumberInput>
+        </FormControl>
+      </SimpleGrid>
 
       <Button
         isLoading={loadingInfo.pdfPagesAreBeingParsed}
         onClick={parseChosenPDFPages}
       >
-        Parse Pages
+        Parse pages
       </Button>
     </Box>
   )
@@ -404,14 +469,15 @@ function PDFLessonContentSource({ setLessonContent }) {
         type="file"
       />
 
-      <Button
-        isDisabled={PDFFlowData.selectedPDFFile === null}
-        isLoading={loadingInfo.pdfDocumentIsLoading}
-        onClick={parseSelectedPDFFile}
-      >
-        Use File
-      </Button>
-
+      <Flex justifyContent="flex-start">
+        <Button
+          isDisabled={PDFFlowData.selectedPDFFile === null}
+          isLoading={loadingInfo.pdfDocumentIsLoading}
+          onClick={parseSelectedPDFFile}
+        >
+          Use File
+        </Button>
+      </Flex>
       {PDFFlowData.parsedPDFDocument !== null && (
         <PDFPagesParsingManager
           loadingInfo={loadingInfo}
@@ -455,8 +521,16 @@ function LessonSource({ setLevelIsCompleted }) {
     setLessonContent(newLessonData.content)
   }, [newLessonData.content])
 
+  const lessonContentHelperMessage = `Min ${MIN_LESSON_CONTENT_WORD_COUNT} words, max ${MAX_LESSON_CONTENT_WORD_COUNT} words, max ${MAX_LESSON_CONTENT_CHAR_COUNT} characters. Content should be properly spaced.`
+
   return (
-    <Box mt="20px">
+    <Box
+      mt="20px"
+      // The padding here is added because a parent of this component uses
+      // chakra-collapse which has overflow:"hidden" set on it)
+      // This padding is to enable visibility of outlines
+      p="2px"
+    >
       <Accordion allowToggle mb="20px">
         <AccordionItem>
           <AccordionButton p="10px 0">
@@ -473,32 +547,39 @@ function LessonSource({ setLevelIsCompleted }) {
             m="0"
             p="20px 0 10px"
           >
-            <FormControl alignItems="flex-start" display="flex">
-              <FormLabel htmlFor={PDFSourceSwitchId} mb="0">
-                Use a PDF file as lesson source
-              </FormLabel>
-              <Switch
-                colorScheme="green"
-                defaultChecked={false}
-                id={PDFSourceSwitchId}
-                onChange={(event) => {
-                  setPDFSwitchIsOn(event.target.checked)
-                }}
-              />
-            </FormControl>
-
-            {PDFSwitchIsOn && (
-              <Box pt="20px">
-                <PDFLessonContentSource
-                  setLessonContent={(content) => {
-                    // Set new lesson data since setLessonContent won't trigger a
-                    // change event of the textarea
-                    newLessonData.content = content
-                    setLessonContent(content)
+            <Box
+              // The padding here is added because a parent of this component uses
+              // chakra-collapse which has overflow:"hidden" set on it)
+              // This padding is to enable visibility of outlines
+              p="2px"
+            >
+              <FormControl alignItems="flex-start" display="flex">
+                <FormLabel htmlFor={PDFSourceSwitchId} mb="0">
+                  Use a PDF file as lesson source
+                </FormLabel>
+                <Switch
+                  colorScheme="green"
+                  defaultChecked={false}
+                  id={PDFSourceSwitchId}
+                  onChange={(event) => {
+                    setPDFSwitchIsOn(event.target.checked)
                   }}
                 />
-              </Box>
-            )}
+              </FormControl>
+
+              {PDFSwitchIsOn && (
+                <Box pt="20px">
+                  <PDFLessonContentSource
+                    setLessonContent={(content) => {
+                      // Set new lesson data since setLessonContent won't trigger a
+                      // change event of the textarea
+                      newLessonData.content = content
+                      setLessonContent(content)
+                    }}
+                  />
+                </Box>
+              )}
+            </Box>
           </AccordionPanel>
         </AccordionItem>
       </Accordion>
@@ -520,29 +601,23 @@ function LessonSource({ setLevelIsCompleted }) {
             type="text"
             value={lessonContent}
           />
-          <Flex gap="20px" justifyContent="space-between">
+          <Flex
+            flexDir={{ base: "column-reverse", sm: "row" }}
+            gap={{ base: "10px", sm: "20px" }}
+            justifyContent="space-between"
+          >
             {lessonContent === "" || lessonContentIsValid ? (
-              <FormHelperText>
-                Lesson content cannot be more than{" "}
-                {MAX_LESSON_CONTENT_CHAR_COUNT} characters long, must be at
-                least {MIN_LESSON_CONTENT_WORD_COUNT} words long, and at most,{" "}
-                {MAX_LESSON_CONTENT_WORD_COUNT} words long
-                <br />
-                For best results, make sure to break paragraphs as often as
-                possible with double line breaks. <br /> This helps to create
-                better questions from the content.
+              <FormHelperText textAlign="left">
+                {lessonContentHelperMessage}
               </FormHelperText>
             ) : (
-              <FormErrorMessage>
-                Lesson content cannot be more than{" "}
-                {MAX_LESSON_CONTENT_CHAR_COUNT} characters long, must be at
-                least {MIN_LESSON_CONTENT_WORD_COUNT} words long, and at most,{" "}
-                {MAX_LESSON_CONTENT_WORD_COUNT} words long
+              <FormErrorMessage textAlign="left">
+                {lessonContentHelperMessage}
               </FormErrorMessage>
             )}
 
             {lessonContent === "" || lessonContentIsValid ? (
-              <FormHelperText>
+              <FormHelperText textAlign="left">
                 {lessonContentWordCount !== 1
                   ? `${lessonContentWordCount} words`
                   : `${lessonContentWordCount} word`}{" "}
@@ -552,7 +627,7 @@ function LessonSource({ setLevelIsCompleted }) {
                   : `${lessonContent.length} char`}
               </FormHelperText>
             ) : (
-              <FormErrorMessage>
+              <FormErrorMessage textAlign="left">
                 {lessonContentWordCount !== 1
                   ? `${lessonContentWordCount} words`
                   : `${lessonContentWordCount} word`}{" "}
@@ -637,12 +712,15 @@ function LessonAdditionalData({ setLevelIsCompleted }) {
   return (
     <Box
       as="form"
-      maxW="600px"
       mt="20px"
       onSubmit={(event) => {
         event.preventDefault()
         addInputTag()
       }}
+      // The padding here is added because a parent of this component uses
+      // chakra-collapse which has overflow:"hidden" set on it)
+      // This padding is to enable visibility of outlines
+      p="2px"
     >
       <FormControl isRequired mb="20px">
         <FormLabel htmlFor={tagInputId}>Enter tag name</FormLabel>
@@ -654,7 +732,7 @@ function LessonAdditionalData({ setLevelIsCompleted }) {
           ref={tagInputRef}
           type="text"
         />
-        <FormHelperText>{tagInputHelperText}</FormHelperText>
+        <FormHelperText textAlign="left">{tagInputHelperText}</FormHelperText>
       </FormControl>
 
       {tags.length > 0 && (
@@ -676,7 +754,11 @@ function LessonAdditionalData({ setLevelIsCompleted }) {
         </Box>
       )}
 
-      <Button type="submit">Add tag</Button>
+      <Flex justifyContent="flex-start">
+        <Button m="0" type="submit">
+          Add tag
+        </Button>
+      </Flex>
     </Box>
   )
 }
@@ -687,6 +769,10 @@ function LessonCreationSection() {
   const [isCreatingLesson, setIsCreatingLesson] = useState(false)
   const [tagsAreSet, setTagsAreSet] = useState(false)
 
+  const stepsVariantToUse = useBreakpointValue(
+    { base: "simple", sm: "circles" },
+    { ssr: false }
+  )
   const { user: currentUser } = useAuth()
   const router = useRouter()
   const toast = useToast()
@@ -926,34 +1012,83 @@ function LessonCreationSection() {
   }
 
   return (
-    <Box pb="20px">
-      <Heading as="h1" p="20px">
-        Create New Lesson
-      </Heading>
+    <Flex flexDir="column" h="100%" justifyContent="space-between">
+      <Flex flex="1 1 200px" flexDir="column" overflow="auto">
+        <Heading as="h1" p="20px">
+          Create New Lesson
+        </Heading>
 
-      <Box maxW="600px" mb="20px" p="0 20px">
-        <Steps activeStep={activeStep} colorScheme="purple" variant="circles">
-          <Step label="Provide Metadata">
-            <LessonMetadata setLevelIsCompleted={setMetaDataIsSet} />
-          </Step>
-          <Step label="Provide source">
-            <LessonSource setLevelIsCompleted={setLessonSourceIsSet} />
-          </Step>
-          <Step label="Add tags">
-            <LessonAdditionalData setLevelIsCompleted={setTagsAreSet} />
-          </Step>
-        </Steps>
-      </Box>
+        <Box
+          bg="white"
+          border="1px solid white"
+          borderColor="blackAlpha.300"
+          borderRightWidth={{ base: "0", sm: "1px" }}
+          flex="1 1 200px"
+          m={{ base: "0 0 20px 20px", sm: "0 20px 20px" }}
+        >
+          <Heading
+            as="h2"
+            bg="blackAlpha.50"
+            borderBottom="1px solid white"
+            borderColor="blackAlpha.300"
+            color="gray.700"
+            fontFamily={Fonts.body}
+            fontSize="1rem"
+            fontWeight="500"
+            p={{ base: "16px 10px", sm: "16px", md: "20px" }}
+          >
+            Lesson details
+          </Heading>
 
-      <VStack
+          <Box p={{ base: "10px", sm: "16px", md: "20px" }}>
+            <Steps
+              activeStep={activeStep}
+              checkIcon={BiCheck}
+              colorScheme="brandSecondary"
+              sx={{
+                "& .cui-steps__vertical-step:last-child": {
+                  pb: "0"
+                },
+
+                "& .cui-steps__horizontal-step-container span": {
+                  fontWeight: "500"
+                },
+
+                "& .cui-steps__vertical-step-container span": {
+                  fontWeight: "500"
+                }
+              }}
+              // This is required because it is set to "center" by chakra-ui-steps
+              // by default
+              textAlign="initial"
+              variant={stepsVariantToUse}
+            >
+              <Step label="Metadata">
+                <LessonMetadata setLevelIsCompleted={setMetaDataIsSet} />
+              </Step>
+              <Step label="Source">
+                <LessonSource setLevelIsCompleted={setLessonSourceIsSet} />
+              </Step>
+              <Step label="Tags">
+                <LessonAdditionalData setLevelIsCompleted={setTagsAreSet} />
+              </Step>
+            </Steps>
+          </Box>
+        </Box>
+      </Flex>
+
+      <Flex
         alignItems="flex-start"
+        bg="white"
         borderColor="blackAlpha.200"
         borderStyle="solid"
         borderWidth="1px 0 0"
-        p="20px 20px 0"
-        spacing="20px"
+        flexWrap="wrap"
+        gap="20px"
+        justifyContent="space-between"
+        p="10px 20px"
       >
-        <ButtonGroup variant="solid">
+        <ButtonGroup spacing="10px" variant="solid">
           <Button isDisabled={activeStep <= 0} onClick={prevStep}>
             Prev
           </Button>
@@ -969,7 +1104,7 @@ function LessonCreationSection() {
         </ButtonGroup>
 
         <Button
-          colorScheme="teal"
+          colorScheme="brandSecondary"
           isDisabled={
             activeStep < indexOfHighestStep ||
             stepsCompletionData.some(
@@ -977,13 +1112,12 @@ function LessonCreationSection() {
             )
           }
           isLoading={isCreatingLesson}
-          mb="20px"
           onClick={createLessonWithProvidedData}
         >
           Create Lesson
         </Button>
-      </VStack>
-    </Box>
+      </Flex>
+    </Flex>
   )
 }
 
@@ -994,7 +1128,7 @@ export default function NewLessonCreationPage() {
   )
 
   return (
-    <ChakraUIProvider useSteps>
+    <ChakraUIProvider>
       <AppLayout pageTitle={`Create New Lesson | ${SITE_TITLE}`}>
         <AppLayoutMinorSection>
           <SideBar>

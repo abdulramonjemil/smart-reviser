@@ -112,7 +112,7 @@ $input-container-padding: 12px;
 .SubmitButton {
   margin-top: utils.get-constant(top-margin);
 
-  $submit-button-color: utils.get-color(tertiary);
+  $submit-button-color: utils.get-color(secondary);
 
   @keyframes spin {
     0% {
@@ -157,7 +157,7 @@ $input-container-padding: 12px;
 
     &:focus,
     &:hover {
-      background-color: color.change($submit-button-color, $lightness: 15%);
+      background-color: color.change($submit-button-color, $lightness: 35%);
     }
   }
 }

@@ -44,7 +44,7 @@ import {
   SIGN_IN_PAGE_URL
 } from "../../../constants/page-urls"
 import { SITE_TITLE } from "../../../constants/site-details"
-import { ChakraUIProvider, Fonts } from "../../../controllers/chakra-ui"
+import { ChakraUIProvider, Fonts } from "../../../controllers/style"
 import {
   LessonContext,
   useLesson,
