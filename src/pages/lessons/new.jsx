@@ -499,10 +499,6 @@ function LessonSource({ setLevelIsCompleted }) {
   const [PDFSwitchIsOn, setPDFSwitchIsOn] = useState(false)
   const [lessonContent, setLessonContent] = useState("")
 
-  function handleLessonContentChange(event) {
-    setLessonContent((newLessonData.content = event.target.value))
-  }
-
   const lessonContentWordCount = countWords(lessonContent)
   const lessonContentIsValid =
     lessonContent.length <= MAX_LESSON_CONTENT_CHAR_COUNT &&
@@ -596,7 +592,9 @@ function LessonSource({ setLevelIsCompleted }) {
             h="150px"
             id={lessonTextareaId}
             maxLength={MAX_LESSON_CONTENT_CHAR_COUNT}
-            onChange={handleLessonContentChange}
+            onChange={(event) => {
+              setLessonContent((newLessonData.content = event.target.value))
+            }}
             placeholder="- - - -"
             type="text"
             value={lessonContent}
