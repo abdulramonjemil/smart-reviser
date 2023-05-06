@@ -1034,8 +1034,9 @@ function LessonCreationSection() {
             color="gray.700"
             fontFamily={Fonts.body}
             fontSize="1rem"
-            fontWeight="500"
+            fontWeight="600"
             p={{ base: "16px 10px", sm: "16px", md: "20px" }}
+            textTransform="capitalize"
           >
             Lesson details
           </Heading>
