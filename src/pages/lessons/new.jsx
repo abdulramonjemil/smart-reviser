@@ -1020,9 +1020,9 @@ function LessonCreationSection() {
           bg="white"
           border="1px solid white"
           borderColor="blackAlpha.300"
-          borderRightWidth={{ base: "0", sm: "1px" }}
+          borderRightWidth="1px"
           flex="1 1 200px"
-          m={{ base: "0 0 20px 20px", sm: "0 20px 20px" }}
+          m="0 20px 20px"
         >
           <Heading
             as="h2"
