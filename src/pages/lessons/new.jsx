@@ -1079,7 +1079,7 @@ function LessonCreationSection() {
       <Flex
         alignItems="flex-start"
         bg="white"
-        borderColor="blackAlpha.200"
+        borderColor="blackAlpha.300"
         borderStyle="solid"
         borderWidth="1px 0 0"
         flexWrap="wrap"
