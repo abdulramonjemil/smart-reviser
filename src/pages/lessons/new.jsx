@@ -1043,7 +1043,7 @@ function LessonCreationSection() {
             <Steps
               activeStep={activeStep}
               checkIcon={BiCheck}
-              colorScheme="brandSecondary"
+              colorScheme="brandTertiary"
               sx={{
                 "& .cui-steps__vertical-step:last-child": {
                   pb: "0"
