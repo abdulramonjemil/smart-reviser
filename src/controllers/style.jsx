@@ -129,6 +129,11 @@ const customizedChakraTheme = extendTheme({
 
 export function ChakraUIProvider({ children }) {
   return (
-    <ChakraProvider theme={customizedChakraTheme}>{children}</ChakraProvider>
+    <ChakraProvider
+      toastOptions={{ defaultOptions: { position: "bottom" } }}
+      theme={customizedChakraTheme}
+    >
+      {children}
+    </ChakraProvider>
   )
 }
