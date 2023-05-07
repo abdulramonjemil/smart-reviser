@@ -60,7 +60,10 @@ export function toUsablePromptChunks(content) {
       const wordCountOfCurrentPlusLastChunk =
         lastSummedWordCount + wordCountOfCurrentValue
 
+      const lastIsShort =
+        lastSummedWordCount < MIN_SENSIBLE_WORD_COUNT_OF_LESSON_PROMPT_CHUNK
       const currentShouldNormallyBeJoinedWithLast =
+        lastIsShort ||
         wordCountOfCurrentPlusLastChunk <= MAX_WORDS_PER_LESSON_PROMPT_CHUNK
 
       const currentIsShort =
@@ -90,15 +93,17 @@ export function toUsablePromptChunks(content) {
     []
   )
 
+  // In case the combination of a couple of chunks in the initial split array is
+  // still not long enough
   const chunksCount = usablePromptChunks.length
-  const lastChunk = usablePromptChunks[chunksCount - 1]
-  const wordCountOfLastChunk = countWords(lastChunk)
-  const lastChunkIsShort =
-    wordCountOfLastChunk < MIN_SENSIBLE_WORD_COUNT_OF_LESSON_PROMPT_CHUNK
+  const finalLastChunk = usablePromptChunks[chunksCount - 1]
+  const wordCountOfFinalLastChunk = countWords(finalLastChunk)
+  const finalLastChunkIsShort =
+    wordCountOfFinalLastChunk < MIN_SENSIBLE_WORD_COUNT_OF_LESSON_PROMPT_CHUNK
 
-  if (lastChunkIsShort && chunksCount > 1) {
+  if (finalLastChunkIsShort && chunksCount > 1) {
     // Append last chunk to the one before it and remove it
-    usablePromptChunks[chunksCount - 2] += `\n${lastChunk}`
+    usablePromptChunks[chunksCount - 2] += `\n${finalLastChunk}`
     usablePromptChunks.pop()
   }
 
