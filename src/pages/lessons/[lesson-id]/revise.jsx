@@ -140,7 +140,23 @@ function LessonQuiz({ maxQuestionsCount, quizState, setQuizState }) {
       })
     }
 
-    if (createdQuizElement !== null) return
+    const thereIsValidQuizElement = createdQuizElement !== null
+    const thereIsValidQuizContainer =
+      quizContainerRef.current instanceof Element
+
+    if (thereIsValidQuizElement && thereIsValidQuizContainer) {
+      quizContainerRef.current.replaceChildren(createdQuizElement)
+      return
+    }
+
+    if (
+      thereIsValidQuizElement ||
+      !thereIsValidQuizContainer ||
+      quizState.quizIsLoaded
+    ) {
+      return
+    }
+
     ;(async () => {
       const lessonQuizGenerationURL = new URL(
         QUIZ_GENERATION_URL,
@@ -219,15 +235,15 @@ function LessonQuiz({ maxQuestionsCount, quizState, setQuizState }) {
 
       const { Quiz } = window
       const [newlyCreatedQuizElement] = Quiz.create(
-        Quiz.Props.define(quizOptions),
-        quizContainerRef.current
+        Quiz.Props.define(quizOptions)
       )
 
+      quizContainerRef.current.replaceChildren(newlyCreatedQuizElement)
       setCreatedQuizElement(newlyCreatedQuizElement)
       setQuizState({ ...quizState, quizIsLoaded: true })
     })()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  })
 
   return (
     <Box p={{ base: 0, sm: "0 20px" }}>
