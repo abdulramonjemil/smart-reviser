@@ -1030,7 +1030,7 @@ function LessonCreationSection() {
             borderColor="blackAlpha.300"
             color="gray.700"
             fontFamily={Fonts.body}
-            fontSize="1rem"
+            fontSize="1.1rem"
             fontWeight="600"
             p={{ base: "16px 10px", sm: "16px", md: "20px" }}
             textTransform="capitalize"
