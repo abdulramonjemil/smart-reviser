@@ -115,22 +115,10 @@ export function toUsablePromptChunks(content) {
  * expected to be JSON and abide by the format defined in the prompt (located at
  * /src/quiz-gen-prompt.txt).
  */
-export function isValidQuizDetails(resultString) {
-  if (typeof resultString !== "string") return false
+export function isValidQuizDetails(resultObject) {
+  if (typeof resultObject !== "object" || resultObject === null) return false
 
-  let parsedJSON = null
-  let errorOccured = false
-
-  try {
-    parsedJSON = JSON.parse(resultString)
-  } catch (error) {
-    errorOccured = true
-  }
-
-  if (errorOccured) return false
-  if (typeof parsedJSON !== "object" || parsedJSON === null) return false
-
-  const quizDetailsArray = parsedJSON.quizDetails
+  const quizDetailsArray = resultObject.quizDetails
 
   if (!Array.isArray(quizDetailsArray)) return false
   if (quizDetailsArray.length === 0) return false

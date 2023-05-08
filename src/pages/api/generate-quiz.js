@@ -23,6 +23,7 @@ export default async function quizGenerationHandler(req, res) {
   }
 
   let userIsAuthenticated = false
+
   try {
     await await SSR.Auth.currentAuthenticatedUser()
     userIsAuthenticated = true
@@ -181,10 +182,10 @@ export default async function quizGenerationHandler(req, res) {
     )
 
     let quizDetailsStringsArrayHasMalformedJSON = false
-    let quizDetailsStringsToValidate = null
+    let quizDetailsObjectsArray = null
 
     try {
-      quizDetailsStringsToValidate = quizDetailsStringsArray.map(
+      quizDetailsObjectsArray = quizDetailsStringsArray.map(
         (quizDetailsString) => {
           // In case the model returns a value that's not directly a valid JSON,
           // we'll look for the first occurrence of an opening curly brace, and
@@ -204,7 +205,7 @@ export default async function quizGenerationHandler(req, res) {
             thereIsNoClosingCurlyBrace ||
             curlyBracesAreMisarranged
           ) {
-            console.log("Got malformed JSON object string: ", quizDetailsString)
+            console.log("Got malformed JSON response:", quizDetailsString)
             throw new Error()
           }
 
@@ -213,7 +214,22 @@ export default async function quizGenerationHandler(req, res) {
             indexOfLastClosingCurlyBrace + 1
           )
 
-          return quizDetailsStringToValidate
+          let quizDetailsObject = null
+          let quizDetailsStringParsingErrorOccurred = false
+
+          try {
+            quizDetailsObject = JSON.parse(quizDetailsStringToValidate)
+          } catch (error) {
+            console.log(
+              "Got malformed JSON object string:",
+              quizDetailsStringToValidate
+            )
+
+            quizDetailsStringParsingErrorOccurred = true
+          }
+
+          if (quizDetailsStringParsingErrorOccurred) throw new Error()
+          return quizDetailsObject
         }
       )
     } catch (error) {
@@ -222,23 +238,15 @@ export default async function quizGenerationHandler(req, res) {
 
     const everyQuizDetailsStringIsUsable =
       !quizDetailsStringsArrayHasMalformedJSON &&
-      quizDetailsStringsToValidate.every((quizDetailsStringToValidate) => {
-        const stringIsValidQuizDetails = isValidQuizDetails(
-          quizDetailsStringToValidate
-        )
+      quizDetailsObjectsArray.every((quizDetailsObject) => {
+        const objectIsValidQuizDetails = isValidQuizDetails(quizDetailsObject)
 
-        if (!stringIsValidQuizDetails)
-          console.log(
-            "Got unusable quiz details string: ",
-            quizDetailsStringToValidate
-          )
-        return stringIsValidQuizDetails
+        if (!objectIsValidQuizDetails)
+          console.log("Got invalid quiz details object:", quizDetailsObject)
+        return objectIsValidQuizDetails
       })
 
     if (!everyQuizDetailsStringIsUsable) throw queryResults
-    const quizDetailsObjectsArray = quizDetailsStringsToValidate.map(
-      (validatedQuizDetailsString) => JSON.parse(validatedQuizDetailsString)
-    )
 
     let finalQuizDetailsArray = quizDetailsObjectsArray.reduce(
       (questionsArray, currentValue) => [
