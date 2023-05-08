@@ -46,6 +46,7 @@ export function toUsablePromptChunks(content) {
   )
 
   let lastSummedWordCount = 0
+
   const usablePromptChunks = contentChunks.reduce(
     (promptChunksArray, currentValue, index) => {
       if (index === 0) {
@@ -97,7 +98,8 @@ export function toUsablePromptChunks(content) {
   // still not long enough
   const chunksCount = usablePromptChunks.length
   const finalLastChunk = usablePromptChunks[chunksCount - 1]
-  const wordCountOfFinalLastChunk = countWords(finalLastChunk)
+  const wordCountOfFinalLastChunk = lastSummedWordCount
+
   const finalLastChunkIsShort =
     wordCountOfFinalLastChunk < MIN_SENSIBLE_WORD_COUNT_OF_LESSON_PROMPT_CHUNK
 
