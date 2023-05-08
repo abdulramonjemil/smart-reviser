@@ -244,7 +244,7 @@ export default async function quizGenerationHandler(req, res) {
         if (!objectIsValidQuizDetails)
           console.log(
             "Got invalid quiz details object:",
-            JSON.stringify(quizDetailsObject)
+            JSON.stringify(quizDetailsObject, null, 2)
           )
         return objectIsValidQuizDetails
       })
