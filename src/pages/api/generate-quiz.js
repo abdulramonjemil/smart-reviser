@@ -180,38 +180,64 @@ export default async function quizGenerationHandler(req, res) {
       (result) => result.rows[0].lesson_quiz
     )
 
-    const everyQuizDetailsStringIsUsable = quizDetailsStringsArray.every(
-      (quizDetailsString) => {
-        // In case the model returns a value that's not directly a valid JSON,
-        // we'll look for the first occurrence of an opening curly brace, and
-        // the last occurrence of a closing curly brace in the string, extract
-        // it, and try to parse as JSON instead of the whole string.
-        const indexOfFirstOpeningCurlyBrace = quizDetailsString.indexOf("{")
-        const indexOfLastClosingCurlyBrace = quizDetailsString.lastIndexOf("}")
+    let quizDetailsStringsArrayHasMalformedJSON = false
+    let quizDetailsStringsToValidate = null
 
-        if (indexOfFirstOpeningCurlyBrace < 0) return false
-        if (indexOfLastClosingCurlyBrace < 0) return false
-        if (indexOfLastClosingCurlyBrace < indexOfFirstOpeningCurlyBrace)
-          return false
+    try {
+      quizDetailsStringsToValidate = quizDetailsStringsArray.map(
+        (quizDetailsString) => {
+          // In case the model returns a value that's not directly a valid JSON,
+          // we'll look for the first occurrence of an opening curly brace, and
+          // the last occurrence of a closing curly brace in the string, extract
+          // it, and try to parse as JSON instead of the whole string.
+          const indexOfFirstOpeningCurlyBrace = quizDetailsString.indexOf("{")
+          const indexOfLastClosingCurlyBrace =
+            quizDetailsString.lastIndexOf("}")
 
-        const quizDetailsStringToValidate = quizDetailsString.substring(
-          indexOfFirstOpeningCurlyBrace,
-          indexOfLastClosingCurlyBrace + 1
-        )
+          const thereIsNoOpeningCurlyBrace = indexOfFirstOpeningCurlyBrace < 0
+          const thereIsNoClosingCurlyBrace = indexOfLastClosingCurlyBrace < 0
+          const curlyBracesAreMisarranged =
+            indexOfLastClosingCurlyBrace < indexOfFirstOpeningCurlyBrace
 
+          if (
+            thereIsNoOpeningCurlyBrace ||
+            thereIsNoClosingCurlyBrace ||
+            curlyBracesAreMisarranged
+          ) {
+            console.log("Got malformed JSON object string: ", quizDetailsString)
+            throw new Error()
+          }
+
+          const quizDetailsStringToValidate = quizDetailsString.substring(
+            indexOfFirstOpeningCurlyBrace,
+            indexOfLastClosingCurlyBrace + 1
+          )
+
+          return quizDetailsStringToValidate
+        }
+      )
+    } catch (error) {
+      quizDetailsStringsArrayHasMalformedJSON = true
+    }
+
+    const everyQuizDetailsStringIsUsable =
+      !quizDetailsStringsArrayHasMalformedJSON &&
+      quizDetailsStringsToValidate.every((quizDetailsStringToValidate) => {
         const stringIsValidQuizDetails = isValidQuizDetails(
           quizDetailsStringToValidate
         )
 
         if (!stringIsValidQuizDetails)
-          console.log("Got unusable quiz details string: ", quizDetailsString)
+          console.log(
+            "Got unusable quiz details string: ",
+            quizDetailsStringToValidate
+          )
         return stringIsValidQuizDetails
-      }
-    )
+      })
 
     if (!everyQuizDetailsStringIsUsable) throw queryResults
-    const quizDetailsObjectsArray = quizDetailsStringsArray.map(
-      (quizDetailsString) => JSON.parse(quizDetailsString)
+    const quizDetailsObjectsArray = quizDetailsStringsToValidate.map(
+      (validatedQuizDetailsString) => JSON.parse(validatedQuizDetailsString)
     )
 
     let finalQuizDetailsArray = quizDetailsObjectsArray.reduce(
