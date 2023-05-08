@@ -1018,9 +1018,8 @@ function LessonCreationSection() {
 
         <Box
           bg="white"
-          border="1px solid white"
+          border="1px solid white" // white is used here as a template
           borderColor="blackAlpha.300"
-          borderRightWidth="1px"
           flex="1 1 200px"
           m="0 20px 20px"
         >
