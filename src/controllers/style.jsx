@@ -9,7 +9,7 @@ export const Fonts = {
 export const Colors = {
   almostWhite: "rgb(245 245 245)",
   primary: "rgb(52 4 68)",
-  secondary: "rgb(3 181 194)",
+  secondary: "rgb(182 48 75)",
   tertiary: "rgb(11 83 68)",
   tertiary__hovered: "rgb(9 68 55)"
 }
