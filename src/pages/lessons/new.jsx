@@ -847,13 +847,15 @@ function LessonCreationSection() {
       if (errorOccuredWhileFetchingTags)
         throw new Error("Error occured while fetching user tags")
 
+      const requiredTagsSet = new Set(tagLabels)
       const userTagsSet = new Set(
         objectsForUserCreatedTags.map((tagObject) => tagObject.label)
       )
 
-      idsOfAlreadyCreatedTags = objectsForUserCreatedTags.map(
-        (tagObject) => tagObject.id
-      )
+      idsOfAlreadyCreatedTags = objectsForUserCreatedTags
+        .filter((tagObject) => requiredTagsSet.has(tagObject.label))
+        .map((tagObject) => tagObject.id)
+
       uncreatedTags = tagLabels.filter((tagLabel) => !userTagsSet.has(tagLabel))
       if (uncreatedTags.length === 0) uncreatedTags = null
     } catch (error) {
