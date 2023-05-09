@@ -6,21 +6,26 @@ import {
   FormHelperText,
   FormLabel,
   Heading,
+  Icon,
   NumberDecrementStepper,
   NumberIncrementStepper,
   NumberInput,
   NumberInputField,
   NumberInputStepper,
   Spinner,
+  Stack,
   Text,
   Textarea,
+  useStyleConfig,
   useToast
 } from "@chakra-ui/react"
 
 import Head from "next/head"
 import Script from "next/script"
 import { useEffect, useRef, useState } from "react"
+
 import { BiBookReader } from "react-icons/bi"
+import { MdOutlineSubtitles } from "react-icons/md"
 
 import {
   AppLayout,
@@ -57,7 +62,7 @@ import {
   QUIZ_GENERATION_PARAMS,
   QUIZ_GEN_HIGHEST_MAX_QUESTIONS_COUNT,
   QUIZ_GEN_LOWEST_MAX_QUESTIONS_COUNT
-} from "../../../lib/lesson-quiz"
+} from "../../../shared/lesson-quiz"
 
 function QuizJSUtils() {
   return (
@@ -76,48 +81,52 @@ function QuizJSUtils() {
 
 function LessonDetails() {
   const lesson = useLesson()
+  const inputLabelStyles = useStyleConfig("FormLabel")
 
   return (
-    <Box maxW="600px" p="0 20px">
-      <Box mb="20px">
-        <Heading
-          as="h2"
-          fontFamily={Fonts.body}
-          fontSize="1.1rem"
-          fontWeight="600"
-        >
-          Title
-        </Heading>
-        <Text>{lesson.title}</Text>
-      </Box>
+    <Box
+      bg="white"
+      borderStyle="solid"
+      borderWidth={{ base: "1px 0", sm: "1px" }}
+      borderColor="blackAlpha.300"
+      m={{ base: "0 0 20px", sm: "0 20px 20px" }}
+      p={{ base: "20px", md: "20px" }}
+    >
+      <Stack alignItems="flex-start" mb="10px">
+        <Icon
+          as={MdOutlineSubtitles}
+          color="brandSecondary.500"
+          h={{ base: "25px", sm: "30px" }}
+          w={{ base: "25px", sm: "30px" }}
+        />
 
-      <Box mb="20px">
         <Heading
-          as="h2"
+          as="h3"
           fontFamily={Fonts.body}
-          fontSize="1.1rem"
-          fontWeight="600"
+          fontSize={{ base: "1.3rem", sm: "1.5rem" }}
+          fontWeight="500"
+          color="gray.700"
+          m="0"
         >
-          Description
+          {lesson.title}
         </Heading>
-        <Text>{lesson.description}</Text>
-      </Box>
+      </Stack>
 
-      <Box mb="20px">
-        <Heading
-          as="h2"
-          fontFamily={Fonts.body}
-          fontSize="1.1rem"
-          fontWeight="600"
-        >
+      <Text color="gray.600" mb="20px">
+        {lesson.description}
+      </Text>
+
+      <Box>
+        <Heading as="h3" fontFamily={Fonts.body} sx={inputLabelStyles}>
           Lesson Content
         </Heading>
         <Textarea
+          color="gray.700"
           h="150px"
           isDisabled
           mt="10px"
-          _disabled={{ opacity: "1" }}
           value={lesson.content}
+          _disabled={{ opacity: "1" }}
         />
       </Box>
     </Box>
@@ -172,6 +181,7 @@ function LessonQuiz({ maxQuestionsCount, quizState, setQuizState }) {
         maxQuestionsCount
       )
 
+      toast.closeAll()
       toast({
         title: "Attempting to create quiz",
         status: "info",
@@ -200,6 +210,7 @@ function LessonQuiz({ maxQuestionsCount, quizState, setQuizState }) {
       }
 
       if (errorOccured) {
+        toast.closeAll()
         toast({
           title: "An error occured",
           description: "Could not generate quiz. Please try again.",
@@ -252,8 +263,7 @@ function LessonQuiz({ maxQuestionsCount, quizState, setQuizState }) {
         borderColor="gray.200"
         borderStyle="solid"
         borderWidth="1px 0 0"
-        mt="20px"
-        p="20px 0"
+        pb={{ sm: "20px" }}
         ref={quizContainerRef}
       />
 
@@ -291,6 +301,7 @@ function LessonRevisionSection({ lessonManager }) {
       maxQuestionsCount < QUIZ_GEN_LOWEST_MAX_QUESTIONS_COUNT ||
       maxQuestionsCount > QUIZ_GEN_HIGHEST_MAX_QUESTIONS_COUNT
     ) {
+      toast.closeAll()
       toast({
         title: "Invalid max questions count",
         status: "error",
@@ -304,89 +315,96 @@ function LessonRevisionSection({ lessonManager }) {
   }
 
   return (
-    <Flex flexDir="column" h="100vh" p="20px 0">
-      <Heading as="h1" mb="20px" p="0 20px">
+    <Flex flexDir="column" h="100vh">
+      <Heading as="h1" p="20px">
         Revise Lesson
       </Heading>
 
-      {(lessonManager.isLoading || lessonManager.errorOccured) && (
-        <Flex
-          alignItems="center"
-          justifyContent="center"
-          flex="1 1 150px"
-          minH="150px"
-          p="0 20px"
-        >
-          {lessonManager.isLoading ? (
-            <Spinner color="gray.700" size="xl" />
-          ) : (
-            <Text>An error occured, lesson could not be loaded</Text>
-          )}
-        </Flex>
-      )}
-
-      {!lessonManager.isLoading && !lessonManager.errorOccured && (
-        <>
-          <LessonContext.Provider value={lessonManager.lesson}>
-            <LessonDetails />
-          </LessonContext.Provider>
-          <FormControl
-            borderColor="gray.300"
-            borderStyle="solid"
-            borderWidth="1px 0 0"
-            isDisabled={quizIsStarted}
-            isRequired
-            maxW="600px"
-            mb="20px"
-            p="20px 20px 0"
-            pt="20px"
+      <Flex flex="1 1 200px" flexDir="column">
+        {(lessonManager.isLoading || lessonManager.errorOccured) && (
+          <Flex
+            alignItems="center"
+            justifyContent="center"
+            flex="1 1 150px"
+            minH="150px"
+            p="0 20px"
           >
-            <FormLabel htmlFor={maxQuestionsInputId}>
-              Max Questions To Generate
-            </FormLabel>
-            <NumberInput
-              defaultValue={QUIZ_GEN_HIGHEST_MAX_QUESTIONS_COUNT}
-              id={maxQuestionsInputId}
-              min={QUIZ_GEN_LOWEST_MAX_QUESTIONS_COUNT}
-              max={QUIZ_GEN_HIGHEST_MAX_QUESTIONS_COUNT}
-              onChange={(value) => setMaxQuestionsCount(value)}
-              step={1}
-            >
-              <NumberInputField />
-              <NumberInputStepper>
-                <NumberIncrementStepper />
-                <NumberDecrementStepper />
-              </NumberInputStepper>
-            </NumberInput>
-            <FormHelperText>
-              The maximum number of questions to generate for revision. Must be
-              between {QUIZ_GEN_LOWEST_MAX_QUESTIONS_COUNT} and{" "}
-              {QUIZ_GEN_HIGHEST_MAX_QUESTIONS_COUNT}. Value will be clamped
-              accordingly after input if needed.
-            </FormHelperText>
-          </FormControl>
+            {lessonManager.isLoading ? (
+              <Spinner color="gray.700" size="xl" />
+            ) : (
+              <Text>An error occured, lesson could not be loaded</Text>
+            )}
+          </Flex>
+        )}
 
-          <Box maxW="600px" p="0 20px 20px">
-            <Button
-              isDisabled={quizIsStarted}
-              isLoading={quizIsStarted && !quizIsLoaded}
-              onClick={attemptToStartLessonQuiz}
-            >
-              Start revision
-            </Button>
-          </Box>
-        </>
-      )}
+        {!lessonManager.isLoading && !lessonManager.errorOccured && (
+          <>
+            <LessonContext.Provider value={lessonManager.lesson}>
+              <LessonDetails />
+            </LessonContext.Provider>
 
-      {quizIsStarted && (
-        <LessonContext.Provider value={lessonManager.lesson}>
-          <LessonQuiz
-            maxQuestionsCount={maxQuestionsCount}
-            quizState={quizState}
-            setQuizState={setQuizState}
-          />
-        </LessonContext.Provider>
-      )}
+            <Box
+              bg="white"
+              flex="1 1 150px"
+              borderTop="1px solid"
+              borderColor="blackAlpha.300"
+              pt="20px"
+            >
+              <FormControl
+                isDisabled={quizIsStarted}
+                isRequired
+                mb="20px"
+                p="0 20px"
+              >
+                <FormLabel htmlFor={maxQuestionsInputId}>
+                  Max Questions To Generate
+                </FormLabel>
+                <NumberInput
+                  defaultValue={QUIZ_GEN_HIGHEST_MAX_QUESTIONS_COUNT}
+                  id={maxQuestionsInputId}
+                  min={QUIZ_GEN_LOWEST_MAX_QUESTIONS_COUNT}
+                  max={QUIZ_GEN_HIGHEST_MAX_QUESTIONS_COUNT}
+                  onChange={(value) => setMaxQuestionsCount(value)}
+                  step={1}
+                >
+                  <NumberInputField />
+                  <NumberInputStepper>
+                    <NumberIncrementStepper />
+                    <NumberDecrementStepper />
+                  </NumberInputStepper>
+                </NumberInput>
+                <FormHelperText>
+                  The maximum number of questions to generate for revision. Must
+                  be between {QUIZ_GEN_LOWEST_MAX_QUESTIONS_COUNT} and{" "}
+                  {QUIZ_GEN_HIGHEST_MAX_QUESTIONS_COUNT}. Value will be clamped
+                  accordingly after input if needed.
+                </FormHelperText>
+              </FormControl>
+
+              <Box p="0 20px 20px">
+                <Button
+                  colorScheme="brandSecondary"
+                  isDisabled={quizIsStarted}
+                  isLoading={quizIsStarted && !quizIsLoaded}
+                  onClick={attemptToStartLessonQuiz}
+                >
+                  Start revision
+                </Button>
+              </Box>
+
+              {quizIsStarted && (
+                <LessonContext.Provider value={lessonManager.lesson}>
+                  <LessonQuiz
+                    maxQuestionsCount={maxQuestionsCount}
+                    quizState={quizState}
+                    setQuizState={setQuizState}
+                  />
+                </LessonContext.Provider>
+              )}
+            </Box>
+          </>
+        )}
+      </Flex>
     </Flex>
   )
 }

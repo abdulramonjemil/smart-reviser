@@ -3,7 +3,6 @@ import { useRouter } from "next/router"
 import { createContext, useContext, useEffect, useState } from "react"
 import * as queries from "../graphql/queries"
 
-// eslint-disable-next-line import/prefer-default-export
 export function useLessonManager() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
