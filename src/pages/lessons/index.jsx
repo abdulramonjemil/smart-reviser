@@ -313,7 +313,7 @@ function AllLessonsView() {
 
   return (
     <Flex flexDir="column" maxW="1200px" pb="20px" minH="100%">
-      <Heading as="h1" mb={{ base: "0", md: "20px" }} p="20px">
+      <Heading as="h1" p="20px">
         Lessons
       </Heading>
 

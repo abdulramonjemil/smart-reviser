@@ -68,7 +68,7 @@ import {
 } from "../../constants/page-urls"
 
 import { SITE_TITLE } from "../../constants/site-details"
-import { ChakraUIProvider, Fonts } from "../../controllers/style"
+import { ChakraUIProvider, Constants } from "../../controllers/style"
 import { AccessPolicyTypes } from "../../controllers/policy"
 import { uniqueId } from "../../lib/markup"
 import { countWords } from "../../lib/utilities"
@@ -1020,67 +1020,51 @@ function LessonCreationSection() {
           bg="white"
           border="1px solid white" // white is used here as a template
           borderColor="blackAlpha.300"
+          borderRadius={Constants.borderRadius}
           flex="1 1 200px"
           m="0 20px 20px"
+          p={{ base: "10px", sm: "16px", md: "20px" }}
         >
-          <Heading
-            as="h2"
-            bg="blackAlpha.50"
-            borderBottom="1px solid white"
-            borderColor="blackAlpha.300"
-            color="gray.700"
-            fontFamily={Fonts.body}
-            fontSize="1.1rem"
-            fontWeight="600"
-            p={{ base: "16px 10px", sm: "16px", md: "20px" }}
-            textTransform="capitalize"
+          <Steps
+            activeStep={activeStep}
+            checkIcon={BiCheck}
+            colorScheme="brandTertiary"
+            sx={{
+              "& .cui-steps__vertical-step:last-child": {
+                pb: "0"
+              },
+
+              "& .cui-steps__horizontal-step-container span": {
+                fontWeight: "500"
+              },
+
+              "& .cui-steps__vertical-step-container span": {
+                fontWeight: "500"
+              }
+            }}
+            // This is required because it is set to "center" by chakra-ui-steps
+            // by default
+            textAlign="initial"
+            variant={stepsVariantToUse}
           >
-            Lesson details
-          </Heading>
-
-          <Box p={{ base: "10px", sm: "16px", md: "20px" }}>
-            <Steps
-              activeStep={activeStep}
-              checkIcon={BiCheck}
-              colorScheme="brandTertiary"
-              sx={{
-                "& .cui-steps__vertical-step:last-child": {
-                  pb: "0"
-                },
-
-                "& .cui-steps__horizontal-step-container span": {
-                  fontWeight: "500"
-                },
-
-                "& .cui-steps__vertical-step-container span": {
-                  fontWeight: "500"
-                }
-              }}
-              // This is required because it is set to "center" by chakra-ui-steps
-              // by default
-              textAlign="initial"
-              variant={stepsVariantToUse}
-            >
-              <Step label="Metadata">
-                <LessonMetadata setLevelIsCompleted={setMetaDataIsSet} />
-              </Step>
-              <Step label="Source">
-                <LessonSource setLevelIsCompleted={setLessonSourceIsSet} />
-              </Step>
-              <Step label="Tags">
-                <LessonAdditionalData setLevelIsCompleted={setTagsAreSet} />
-              </Step>
-            </Steps>
-          </Box>
+            <Step label="Metadata">
+              <LessonMetadata setLevelIsCompleted={setMetaDataIsSet} />
+            </Step>
+            <Step label="Source">
+              <LessonSource setLevelIsCompleted={setLessonSourceIsSet} />
+            </Step>
+            <Step label="Tags">
+              <LessonAdditionalData setLevelIsCompleted={setTagsAreSet} />
+            </Step>
+          </Steps>
         </Box>
       </Flex>
 
       <Flex
         alignItems="flex-start"
         bg="white"
+        borderTop="1px solid"
         borderColor="blackAlpha.300"
-        borderStyle="solid"
-        borderWidth="1px 0 0"
         flexWrap="wrap"
         gap="20px"
         justifyContent="space-between"
