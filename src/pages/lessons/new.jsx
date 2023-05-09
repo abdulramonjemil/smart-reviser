@@ -77,7 +77,7 @@ import {
   MAX_LESSON_CONTENT_CHAR_COUNT,
   MAX_LESSON_CONTENT_WORD_COUNT,
   MIN_LESSON_CONTENT_WORD_COUNT
-} from "../../lib/lesson-quiz"
+} from "../../shared/lesson-quiz"
 
 import * as queries from "../../graphql/queries"
 import * as mutations from "../../graphql/mutations"

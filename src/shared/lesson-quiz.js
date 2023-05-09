@@ -1,4 +1,4 @@
-import { countWords } from "./utilities"
+import { countWords } from "../lib/utilities"
 
 export const QUIZ_GENERATION_PARAMS = {
   LESSON_ID: "lesson_id",
@@ -129,22 +129,17 @@ export function isValidQuizDetails(resultObject) {
     if (typeof value !== "object" || value === null) return false
     const { question, options, answer, explanation } = value
 
-    const isNonEmptyString = (val) => typeof val === "string" && val !== ""
-    if (!isNonEmptyString(question)) return false
+    const isFilledString = (val) => typeof val === "string" && val !== ""
+    if (!isFilledString(question)) return false
     if (typeof options !== "object" || options === null) return false
 
     const { A: optionA, B: optionB, C: optionC, D: optionD } = options
-    if (
-      !isNonEmptyString(optionA) ||
-      !isNonEmptyString(optionB) ||
-      !isNonEmptyString(optionC) ||
-      !isNonEmptyString(optionD)
-    ) {
+    if (![optionA, optionB, optionC, optionD].every(isFilledString)) {
       return false
     }
 
     if (!["A", "B", "C", "D"].includes(answer)) return false
-    if (!isNonEmptyString(explanation) && explanation !== null) return false
+    if (!isFilledString(explanation) && explanation !== null) return false
     return true
   }
 

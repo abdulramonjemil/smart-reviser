@@ -12,7 +12,7 @@ import {
   QUIZ_GEN_HIGHEST_MAX_QUESTIONS_COUNT,
   QUIZ_GEN_LOWEST_MAX_QUESTIONS_COUNT,
   toUsablePromptChunks
-} from "../../lib/lesson-quiz"
+} from "../../shared/lesson-quiz"
 
 export default async function quizGenerationHandler(req, res) {
   const SSR = withSSRContext({ req })
