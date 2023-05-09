@@ -25,7 +25,7 @@ export default async function quizGenerationHandler(req, res) {
   let userIsAuthenticated = false
 
   try {
-    await await SSR.Auth.currentAuthenticatedUser()
+    await SSR.Auth.currentAuthenticatedUser()
     userIsAuthenticated = true
   } catch (error) {
     console.log("User is not authenticated", error)
@@ -250,19 +250,22 @@ export default async function quizGenerationHandler(req, res) {
       quizDetailsObjectsArray.every((quizDetailsObject, index) => {
         const objectIsValidQuizDetails = isValidQuizDetails(quizDetailsObject)
 
-        if (!objectIsValidQuizDetails)
+        if (!objectIsValidQuizDetails) {
           console.log(
             "Got invalid quiz details object:",
             JSON.stringify(quizDetailsObject, null, 2)
           )
 
-        console.log(
-          "The query that resulted in the error:",
-          quizGenerationQueries[index]
-        )
+          console.log(
+            "The query that resulted in the error:",
+            quizGenerationQueries[index]
+          )
+        }
+
         return objectIsValidQuizDetails
       })
 
+    // eslint-disable-next-line no-unreachable
     if (!everyQuizDetailsStringIsUsable) throw queryResults
 
     let finalQuizDetailsArray = quizDetailsObjectsArray.reduce(
@@ -280,6 +283,7 @@ export default async function quizGenerationHandler(req, res) {
       )
 
     singleQuizDetailsObjectToUse = { quizDetails: finalQuizDetailsArray }
+    // eslint-disable-next-line no-unreachable
   } catch (error) {
     console.log("Error occured while running query", error)
     errorOccuredWhileRunningQuery = true

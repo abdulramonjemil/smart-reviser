@@ -197,7 +197,12 @@ function LessonQuiz({ maxQuestionsCount, quizState, setQuizState }) {
           lessonQuizGenerationURL,
           {
             method: "GET",
-            mode: "same-origin"
+            mode: "same-origin",
+            cache: "no-cache",
+            headers: {
+              "Cache-Control": "no-cache, no-store, must-revalidate",
+              Expires: "0"
+            }
           }
         )
 
