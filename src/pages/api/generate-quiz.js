@@ -186,7 +186,7 @@ export default async function quizGenerationHandler(req, res) {
 
     try {
       quizDetailsObjectsArray = quizDetailsStringsArray.map(
-        (quizDetailsString) => {
+        (quizDetailsString, index) => {
           // In case the model returns a value that's not directly a valid JSON,
           // we'll look for the first occurrence of an opening curly brace, and
           // the last occurrence of a closing curly brace in the string, extract
@@ -206,6 +206,10 @@ export default async function quizGenerationHandler(req, res) {
             curlyBracesAreMisarranged
           ) {
             console.log("Got malformed JSON response:", quizDetailsString)
+            console.log(
+              "The query that resulted in the error:",
+              quizGenerationQueries[index]
+            )
             throw new Error()
           }
 
@@ -225,6 +229,11 @@ export default async function quizGenerationHandler(req, res) {
               quizDetailsStringToValidate
             )
 
+            console.log(
+              "The query that resulted in the error:",
+              quizGenerationQueries[index]
+            )
+
             quizDetailsStringParsingErrorOccurred = true
           }
 
@@ -238,7 +247,7 @@ export default async function quizGenerationHandler(req, res) {
 
     const everyQuizDetailsStringIsUsable =
       !quizDetailsStringsArrayHasMalformedJSON &&
-      quizDetailsObjectsArray.every((quizDetailsObject) => {
+      quizDetailsObjectsArray.every((quizDetailsObject, index) => {
         const objectIsValidQuizDetails = isValidQuizDetails(quizDetailsObject)
 
         if (!objectIsValidQuizDetails)
@@ -246,6 +255,11 @@ export default async function quizGenerationHandler(req, res) {
             "Got invalid quiz details object:",
             JSON.stringify(quizDetailsObject, null, 2)
           )
+
+        console.log(
+          "The query that resulted in the error:",
+          quizGenerationQueries[index]
+        )
         return objectIsValidQuizDetails
       })
 
