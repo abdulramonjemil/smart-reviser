@@ -53,6 +53,7 @@ export function useLessonManager() {
       } catch (error) {
         setErrorOccured(true)
       }
+
       setIsLoading(false)
     })()
   }, [isLoading, lesson, router.isReady, router.query])
