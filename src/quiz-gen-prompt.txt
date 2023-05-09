@@ -39,8 +39,10 @@ must start with a "{" which will be the start of the JSON, and it must end with
 a "}" which will be the end of the JSON. You must not include anything like
 "Here are x possible questions...". You must respond with just valid JSON in the
 above format. Also, the questions, options, and explanations must contain no
-line breaks. Also, make sure to make the answer options are random as possible.
-Again, your response must be valid JSON, must be in the above format, and must
-be based on the lesson contents you have read earlier.
+line breaks. Also make sure to make the answer options as random as possible.
+All questions must have options A, B, C, and D (four options). There cannot be
+questions with less than four options or more than four options. Again, your
+response must be valid JSON, must be in the above format, and must be based on
+the lesson contents you have read earlier.
 
 The RFC8259 compliant JSON containing the questions: ';
