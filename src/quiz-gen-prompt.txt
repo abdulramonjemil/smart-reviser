@@ -8,13 +8,13 @@ prompt_template = '
 Read everything below carefully:  
 {{lesson_content}}
 
-All of the above (every single thing you have read till now) is the content of
-the lesson discussed by a teacher in a class. The teacher wants to give the
-students an exercise based on this lesson, and they are to take the exercise on
-a web app. Create a valid JSON object containing {{questions_count}} questions
-(or less if that amount can not possibly be generated) that the teacher can
-parse in the web app to create a quiz for the students. The JSON must adhere
-strictly to the following format:
+All of the above (every single thing you have read till now) is a part of the
+content of the lesson discussed by a teacher in a class. The teacher wants to
+give the students an exercise based on this lesson, and they are to take the
+exercise on a web app. Create a valid JSON object containing {{questions_count}}
+questions (or less if that amount can not possibly be generated) that the
+teacher can parse in the web app to create a quiz for the students. The JSON
+must adhere strictly to the following format:
 
 {
   "quizDetails": [
@@ -41,8 +41,12 @@ a "}" which will be the end of the JSON. You must not include anything like
 above format. Also, the questions, options, and explanations must contain no
 line breaks. Also make sure to make the answer options as random as possible.
 All questions must have options A, B, C, and D (four options). There cannot be
-questions with less than four options or more than four options. Again, your
-response must be valid JSON, must be in the above format, and must be based on
-the lesson contents you have read earlier.
+questions with less than four options or more than four options.
+
+Remember that the provided lesson content (everything from the top) is only a
+part of the whole the lesson not the whole lesson, so you should not mind it.
+Just generate the questions based on that part. Again, your response must be
+valid JSON, must be in the above format, and must be based on the lesson
+contents you have read earlier.
 
 The RFC8259 compliant JSON containing the questions: ';
