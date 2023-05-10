@@ -181,14 +181,6 @@ function LessonQuiz({ maxQuestionsCount, quizState, setQuizState }) {
         maxQuestionsCount
       )
 
-      toast.closeAll()
-      toast({
-        title: "Attempting to create quiz",
-        status: "info",
-        duration: 6000,
-        isClosable: true
-      })
-
       let quizDetailsObject = null
       let errorOccured = false
 
