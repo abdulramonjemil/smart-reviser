@@ -198,7 +198,7 @@ function LessonQuiz({ maxQuestionsCount, quizState, setQuizState }) {
           {
             method: "GET",
             mode: "same-origin",
-            cache: "no-cache",
+            cache: "no-store",
             headers: {
               "Cache-Control": "no-cache, no-store, must-revalidate",
               Expires: "0"
