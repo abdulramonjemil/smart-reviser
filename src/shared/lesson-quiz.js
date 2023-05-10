@@ -134,12 +134,29 @@ export function isValidQuizDetails(resultObject) {
     if (typeof options !== "object" || options === null) return false
 
     const { A: optionA, B: optionB, C: optionC, D: optionD } = options
-    if (![optionA, optionB, optionC, optionD].every(isFilledString)) {
-      return false
-    }
+    const optionsArray = [optionA, optionB, optionC, optionD]
 
-    if (!["A", "B", "C", "D"].includes(answer)) return false
-    if (!isFilledString(explanation) && explanation !== null) return false
+    const firstUndefinedOptionIndex = optionsArray.findIndex(
+      (option) => option === undefined
+    )
+
+    // There must be at least two options
+    if (firstUndefinedOptionIndex >= 0 && firstUndefinedOptionIndex < 2)
+      return false
+
+    const slicingEndIndex =
+      firstUndefinedOptionIndex >= 0 ? firstUndefinedOptionIndex : 4
+    const optionsToCheck = optionsArray.slice(0, slicingEndIndex)
+
+    if (!optionsToCheck.every(isFilledString)) return false
+
+    const optionLettersToCheckAgainst = ["A", "B", "C", "D"].slice(
+      0,
+      slicingEndIndex
+    )
+
+    if (!optionLettersToCheckAgainst.includes(answer)) return false
+    if (!isFilledString(explanation)) return false
     return true
   }
 
