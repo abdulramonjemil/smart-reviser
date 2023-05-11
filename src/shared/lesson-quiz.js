@@ -30,7 +30,7 @@ export const LESSON_CONTENT_SPLITTER_IN_CHUNKS = /\n{1,}/
  * to be so. If the values must be higher, I might have to manually deploy the
  * function to Lambda somehow instead of deploying it as an API route.
  */
-export const MAX_WORDS_PER_LESSON_PROMPT_CHUNK = 200
+export const MAX_WORDS_PER_LESSON_PROMPT_CHUNK = 100
 export const HIGHEST_MAX_QUESTIONS_COUNT_PER_PROMPT = 3
 
 // Used to make sure that very short chunks are not used alone when possible
