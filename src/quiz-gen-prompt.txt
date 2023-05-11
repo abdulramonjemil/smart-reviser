@@ -11,12 +11,11 @@ Read everything below carefully:
 --------------------------------------------------------------------------
 
 The paragraphs above is a part of the content of the lesson discussed by a
-teacher in a class on the topic `{{lesson_title}}`. The teacher wants to give
-the students an exercise based on this lesson, and they are to take the exercise
-on a web app. Create a valid JSON object containing {{questions_count}}
-questions (or less if that amount can not possibly be generated) that the
-teacher can parse in the web app to create a quiz for the students. The JSON
-must adhere strictly to the following format:
+teacher in a class. The teacher wants to give the students an exercise based on
+this lesson, and they are to take the exercise on a web app. Create a valid JSON
+object containing {{questions_count}} questions (or less if that amount can not
+possibly be generated) that the teacher can parse in the web app to create a
+quiz for the students. The JSON must adhere strictly to the following format:
 
 {
   "quizDetails": [

@@ -57,7 +57,6 @@ export default async function quizGenerationHandler(req, res) {
   }
 
   let lessonContent = null
-  let lessonTitle = null
 
   try {
     const lessonFetchingResult = await SSR.API.graphql({
@@ -65,16 +64,11 @@ export default async function quizGenerationHandler(req, res) {
       variables: { id: lessonId }
     })
 
-    const { content: lessonContentToUse, title: lessonTitleToUse } =
-      lessonFetchingResult.data.getLesson
-
+    const lessonContentToUse = lessonFetchingResult.data.getLesson.content
     if (typeof lessonContentToUse !== "string" || lessonContentToUse === "")
       throw lessonContentToUse
-    if (typeof lessonTitleToUse !== "string" || lessonTitleToUse === "")
-      throw lessonTitleToUse
 
     lessonContent = lessonContentToUse
-    lessonTitle = lessonTitleToUse
   } catch (error) {
     console.log("Error occured while loading lesson", error)
     res.status(500).end()
@@ -83,7 +77,6 @@ export default async function quizGenerationHandler(req, res) {
 
   // Mindsdb SQL errors when it encounters single quotes for some reason
   const finalLessonContentToUse = lessonContent.replace(/'/g, "ʼ")
-  const finalLessonTitleToUse = lessonTitle.replace(/'/g, "ʼ")
   const chunksToUseInPrompts = toUsablePromptChunks(finalLessonContentToUse)
 
   if (chunksToUseInPrompts.length < 2) {
@@ -124,7 +117,6 @@ export default async function quizGenerationHandler(req, res) {
       SELECT lesson_quiz
       FROM mindsdb.lesson_quiz_generator
       WHERE questions_count = '${questionsCountPerPrompt}'
-      AND lesson_title = ${mysql.escape(finalLessonTitleToUse)}
       AND lesson_content = ${mysql.escape(chunk)}
     `
   )

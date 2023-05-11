@@ -1,7 +1,6 @@
 SELECT lesson_quiz  
 FROM mindsdb.lesson_quiz_generator  
 WHERE questions_count = '5'  
-AND lesson_title = 'Creating and editing files in vim'  
 AND lesson_content = '  
 6 Creating and editing files A text editor is a program that allows you to
 create and edit a simple plain text file. Things like Word allow you to embed
