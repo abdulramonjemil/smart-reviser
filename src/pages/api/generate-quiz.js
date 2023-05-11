@@ -22,17 +22,9 @@ export default async function quizGenerationHandler(req, res) {
     return
   }
 
-  let userIsAuthenticated = false
-
   try {
     await SSR.Auth.currentAuthenticatedUser()
-    userIsAuthenticated = true
   } catch (error) {
-    console.log("User is not authenticated", error)
-    userIsAuthenticated = false
-  }
-
-  if (!userIsAuthenticated) {
     res.status(401).end()
     return
   }
@@ -65,7 +57,7 @@ export default async function quizGenerationHandler(req, res) {
   }
 
   let lessonContent = null
-  let errorOccuredWhileLoadingLesson = false
+  let lessonTitle = null
 
   try {
     const lessonFetchingResult = await SSR.API.graphql({
@@ -73,22 +65,25 @@ export default async function quizGenerationHandler(req, res) {
       variables: { id: lessonId }
     })
 
-    const lessonContentToUse = lessonFetchingResult.data.getLesson.content
+    const { content: lessonContentToUse, title: lessonTitleToUse } =
+      lessonFetchingResult.data.getLesson
+
     if (typeof lessonContentToUse !== "string" || lessonContentToUse === "")
       throw lessonContentToUse
+    if (typeof lessonTitleToUse !== "string" || lessonTitleToUse === "")
+      throw lessonTitleToUse
+
     lessonContent = lessonContentToUse
+    lessonTitle = lessonTitleToUse
   } catch (error) {
     console.log("Error occured while loading lesson", error)
-    errorOccuredWhileLoadingLesson = true
-  }
-
-  if (errorOccuredWhileLoadingLesson) {
     res.status(500).end()
     return
   }
 
   // Mindsdb SQL errors when it encounters single quotes for some reason
   const finalLessonContentToUse = lessonContent.replace(/'/g, "ʼ")
+  const finalLessonTitleToUse = lessonTitle.replace(/'/g, "ʼ")
   const chunksToUseInPrompts = toUsablePromptChunks(finalLessonContentToUse)
 
   if (chunksToUseInPrompts.length < 2) {
@@ -96,12 +91,6 @@ export default async function quizGenerationHandler(req, res) {
       chunksToUseInPrompts.length === 0 ||
       countWords(chunksToUseInPrompts[0]) < MIN_LESSON_CONTENT_WORD_COUNT
     ) {
-      console.log(
-        "Lesson content word count is not up to the required minimum",
-        "Lesson content:",
-        lessonContent
-      )
-
       res
         .staus(400)
         .end("Lesson content word count is not up to the required minimum")
@@ -131,11 +120,25 @@ export default async function quizGenerationHandler(req, res) {
   // See the CREATE MODEL STATEMENT in /src/quiz-gen-prompt.txt and sample in
   // /src/quiz-gen-sample.txt
   const quizGenerationQueriesAlt = chunksToUseInPrompts.map(
-    (chunk) =>
-      `SELECT lesson_quiz FROM mindsdb.lesson_quiz_generator WHERE questions_count = ${questionsCountPerPrompt} AND lesson_content = ${mysql.escape(
-        chunk
-      )}`
+    (chunk) => `
+      SELECT lesson_quiz
+      FROM mindsdb.lesson_quiz_generator
+      WHERE questions_count = '${questionsCountPerPrompt}'
+      AND lesson_title = ${mysql.escape(finalLessonTitleToUse)}
+      AND lesson_content = ${mysql.escape(chunk)}
+    `
   )
+
+  try {
+    await MindsDB.connect({
+      user: process.env.MINDSDB_CLOUD_USERNAME,
+      password: process.env.MINDSDB_CLOUD_PASSWORD
+    })
+  } catch (error) {
+    console.log("Error occured while connecting with MindsDB", error)
+    res.status(500).end()
+    return
+  }
 
   const quizGenerationQueries =
     quizGenerationQueriesAlt.length <= numberOfPromptChunksToUse
@@ -145,128 +148,127 @@ export default async function quizGenerationHandler(req, res) {
           numberOfPromptChunksToUse
         )
 
-  let errorOccuredWhileConnectingWithMindsDB = false
-
   try {
-    await MindsDB.connect({
-      user: process.env.MINDSDB_CLOUD_USERNAME,
-      password: process.env.MINDSDB_CLOUD_PASSWORD
-    })
-  } catch (error) {
-    console.log("Error occured while connecting with MindsDB", error)
-    errorOccuredWhileConnectingWithMindsDB = true
-  }
-
-  if (errorOccuredWhileConnectingWithMindsDB) {
-    res.status(500).end()
-    return
-  }
-
-  let errorOccuredWhileRunningQuery = false
-  let singleQuizDetailsObjectToUse = null
-
-  try {
-    const queryResults = await Promise.all(
+    const settledQueryResults = await Promise.allSettled(
       quizGenerationQueries.map((query) => MindsDB.SQL.runQuery(query))
     )
 
-    const someQueriesCompletedBadly = queryResults.some(
-      (result) => result.rows.length < 1
-    )
-    if (someQueriesCompletedBadly) throw queryResults
+    const queriesWithNonEmptyRows = []
+    const queryResultsWithNonEmptyRows = settledQueryResults.filter(
+      (settledResult, index) => {
+        const resultIsFulfilled = settledResult.status === "fulfilled"
+        const resultHasRows =
+          resultIsFulfilled && settledResult.value.rows.length > 0
 
-    // Only one row of data is expected from the query and it should have the
-    // lesson quiz entry
-    const quizDetailsStringsArray = queryResults.map(
-      (result) => result.rows[0].lesson_quiz
-    )
-
-    let quizDetailsStringsArrayHasMalformedJSON = false
-    let quizDetailsObjectsArray = null
-
-    try {
-      quizDetailsObjectsArray = quizDetailsStringsArray.map(
-        (quizDetailsString, index) => {
-          // In case the model returns a value that's not directly a valid JSON,
-          // we'll look for the first occurrence of an opening curly brace, and
-          // the last occurrence of a closing curly brace in the string, extract
-          // it, and try to parse as JSON instead of the whole string.
-          const indexOfFirstOpeningCurlyBrace = quizDetailsString.indexOf("{")
-          const indexOfLastClosingCurlyBrace =
-            quizDetailsString.lastIndexOf("}")
-
-          const thereIsNoOpeningCurlyBrace = indexOfFirstOpeningCurlyBrace < 0
-          const thereIsNoClosingCurlyBrace = indexOfLastClosingCurlyBrace < 0
-          const curlyBracesAreMisarranged =
-            indexOfLastClosingCurlyBrace < indexOfFirstOpeningCurlyBrace
-
-          if (
-            thereIsNoOpeningCurlyBrace ||
-            thereIsNoClosingCurlyBrace ||
-            curlyBracesAreMisarranged
-          ) {
-            console.log("Got malformed JSON response:", quizDetailsString)
-            console.log(
-              "The query that resulted in the error:",
-              quizGenerationQueries[index]
-            )
-            throw new Error()
-          }
-
-          const quizDetailsStringToValidate = quizDetailsString.substring(
-            indexOfFirstOpeningCurlyBrace,
-            indexOfLastClosingCurlyBrace + 1
-          )
-
-          let quizDetailsObject = null
-          let quizDetailsStringParsingErrorOccurred = false
-
-          try {
-            quizDetailsObject = JSON.parse(quizDetailsStringToValidate)
-          } catch (error) {
-            console.log(
-              "Got malformed JSON object string:",
-              quizDetailsStringToValidate
-            )
-
-            console.log(
-              "The query that resulted in the error:",
-              quizGenerationQueries[index]
-            )
-
-            quizDetailsStringParsingErrorOccurred = true
-          }
-
-          if (quizDetailsStringParsingErrorOccurred) throw new Error()
-          return quizDetailsObject
-        }
-      )
-    } catch (error) {
-      quizDetailsStringsArrayHasMalformedJSON = true
-    }
-
-    const everyQuizDetailsStringIsUsable =
-      !quizDetailsStringsArrayHasMalformedJSON &&
-      quizDetailsObjectsArray.every((quizDetailsObject, index) => {
-        const objectIsValidQuizDetails = isValidQuizDetails(quizDetailsObject)
-
-        if (!objectIsValidQuizDetails) {
+        if (!resultIsFulfilled) {
           console.log(
-            "Got invalid quiz details object:",
-            JSON.stringify(quizDetailsObject, null, 2)
+            "Query returned unfulfilled:",
+            settledResult.reason,
+            "\nThe query that resulted in the error:",
+            quizGenerationQueries[index]
           )
-
+        } else if (!resultHasRows) {
           console.log(
-            "The query that resulted in the error:",
+            "Query retured no rows.",
+            "Value returned:",
+            settledResult.value,
+            "\nThe query that resulted in the error:",
             quizGenerationQueries[index]
           )
         }
 
-        return objectIsValidQuizDetails
+        const isAppropriateResult = resultIsFulfilled && resultHasRows
+        if (isAppropriateResult)
+          queriesWithNonEmptyRows.push(quizGenerationQueries[index])
+        return isAppropriateResult
+      }
+    )
+
+    // Only one row of data is expected from the query and it should have the
+    // lesson quiz entry
+    const quizStringsInResultsWithNonEmptyRows =
+      queryResultsWithNonEmptyRows.map(
+        (result) => result.value.rows[0].lesson_quiz
+      )
+
+    const INVALID_QUIZ_DETAILS_OBJECT_SYMBOL = Symbol(
+      "INVALID_QUIZ_DETAILS_OBJECT"
+    )
+
+    const potentialQuizDetailsObjectsArray =
+      quizStringsInResultsWithNonEmptyRows.map((quizDetailsString, index) => {
+        // In case the model returns a value that's not directly a valid JSON,
+        // we'll look for the first occurrence of an opening curly brace, and
+        // the last occurrence of a closing curly brace in the string, extract
+        // it, and try to parse as JSON instead of the whole string.
+        const indexOfFirstOpeningCurlyBrace = quizDetailsString.indexOf("{")
+        const indexOfLastClosingCurlyBrace = quizDetailsString.lastIndexOf("}")
+
+        const thereIsNoOpeningCurlyBrace = indexOfFirstOpeningCurlyBrace < 0
+        const thereIsNoClosingCurlyBrace = indexOfLastClosingCurlyBrace < 0
+        const curlyBracesAreMisarranged =
+          indexOfLastClosingCurlyBrace < indexOfFirstOpeningCurlyBrace
+
+        if (
+          thereIsNoOpeningCurlyBrace ||
+          thereIsNoClosingCurlyBrace ||
+          curlyBracesAreMisarranged
+        ) {
+          console.log(
+            "Got malformed JSON response:",
+            quizDetailsString,
+            "\nThe query that resulted in the error:",
+            queriesWithNonEmptyRows[index]
+          )
+          return INVALID_QUIZ_DETAILS_OBJECT_SYMBOL
+        }
+
+        const quizDetailsStringToValidate = quizDetailsString.substring(
+          indexOfFirstOpeningCurlyBrace,
+          indexOfLastClosingCurlyBrace + 1
+        )
+
+        let quizDetailsObject = null
+        let quizDetailsStringParsingErrorOccurred = false
+
+        try {
+          quizDetailsObject = JSON.parse(quizDetailsStringToValidate)
+        } catch (error) {
+          console.log(
+            "Got malformed JSON object string:",
+            quizDetailsStringToValidate,
+            "\nThe query that resulted in the error:",
+            queriesWithNonEmptyRows[index]
+          )
+
+          quizDetailsStringParsingErrorOccurred = true
+        }
+
+        if (quizDetailsStringParsingErrorOccurred) {
+          return INVALID_QUIZ_DETAILS_OBJECT_SYMBOL
+        }
+
+        return quizDetailsObject
       })
 
-    // eslint-disable-next-line no-unreachable
-    if (!everyQuizDetailsStringIsUsable) throw queryResults
+    const quizDetailsObjectsArray = potentialQuizDetailsObjectsArray.filter(
+      (item, index) => {
+        const itemIsParsedObject = item !== INVALID_QUIZ_DETAILS_OBJECT_SYMBOL
+        const itemIsValidQuizDetailsObject =
+          itemIsParsedObject && isValidQuizDetails(item)
+
+        if (itemIsParsedObject && !itemIsValidQuizDetailsObject) {
+          console.log(
+            "Got invalid quiz details object:",
+            JSON.stringify(item, null, 2),
+            "\nThe query that resulted in the error:",
+            queriesWithNonEmptyRows[index]
+          )
+        }
+
+        return itemIsParsedObject && itemIsValidQuizDetailsObject
+      }
+    )
 
     let finalQuizDetailsArray = quizDetailsObjectsArray.reduce(
       (questionsArray, currentValue) => [
@@ -276,23 +278,24 @@ export default async function quizGenerationHandler(req, res) {
       []
     )
 
-    if (finalQuizDetailsArray.length > maxQuestionsCount)
+    if (finalQuizDetailsArray.length > maxQuestionsCount) {
       finalQuizDetailsArray = getXRandomSequentialValuesFrom(
         finalQuizDetailsArray,
         maxQuestionsCount
       )
+    } else if (finalQuizDetailsArray.length === 0) {
+      console.log(
+        "All query results couldn't be combined to a valid quiz object"
+      )
 
-    singleQuizDetailsObjectToUse = { quizDetails: finalQuizDetailsArray }
-    // eslint-disable-next-line no-unreachable
+      res.status(500).end()
+      return
+    }
+
+    const finalQuizObject = { quizDetails: finalQuizDetailsArray }
+    res.status(200).json(finalQuizObject)
   } catch (error) {
     console.log("Error occured while running query", error)
-    errorOccuredWhileRunningQuery = true
-  }
-
-  if (errorOccuredWhileRunningQuery) {
     res.status(500).end()
-    return
   }
-
-  res.status(200).json(singleQuizDetailsObjectToUse)
 }
