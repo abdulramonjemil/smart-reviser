@@ -10,8 +10,8 @@ this repo, or forking it and then cloning that instead.
 
 You have to clone both the project source code AND the structure of your AWS
 resources to their own account. For this, you can run the following command and
-pass in your github URL e.g
-[this repo's URL](https://github.com/abdulramonjemil/smart-reviser):
+pass in your github URL e.g [this repo's
+URL](https://github.com/abdulramonjemil/smart-reviser):
 
 ```bash
 amplify init --app <YOUR_GITHUB_URL>
@@ -30,7 +30,9 @@ result.
 
 For this project to work correctly, you have to supply the required environment
 variables. An example can be found in `.env.example` in the root of the project.
-Use [Next.js patterns](https://nextjs.org/docs/basic-features/environment-variables) for the `.env` file.
+Use [Next.js
+patterns](https://nextjs.org/docs/basic-features/environment-variables) for the
+`.env` file.
 
 ## Tech Stack
 
