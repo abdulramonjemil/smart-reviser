@@ -15,6 +15,7 @@ URL](https://github.com/abdulramonjemil/smart-reviser):
 
 ```bash
 amplify init --app <YOUR_GITHUB_URL>
+amplify push
 ```
 
 You can then run the development server:
