@@ -18,7 +18,10 @@ amplify init --app <YOUR_GITHUB_URL>
 amplify push
 ```
 
-You can then run the development server:
+You also need to set up the prompts used to generate the quizzes on MindsDB. For
+this, you have to create a MindsDB account, and run the sql query in the
+`src/quiz-gen-prompt.sql` in their SQL editor to create the model. After this
+completes successfully, you can go on to start the Next.js development server:
 
 ```bash
 npm run dev
