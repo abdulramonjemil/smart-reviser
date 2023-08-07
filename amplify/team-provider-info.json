@@ -1,0 +1,29 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-smartreviser-dev-134826-authRole",
+      "UnauthRoleArn": "arn:aws:iam::072560545057:role/amplify-smartreviser-dev-134826-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::072560545057:role/amplify-smartreviser-dev-134826-authRole",
+      "Region": "us-east-1",
+      "DeploymentBucketName": "amplify-smartreviser-dev-134826-deployment",
+      "UnauthRoleName": "amplify-smartreviser-dev-134826-unauthRole",
+      "StackName": "amplify-smartreviser-dev-134826",
+      "StackId": "arn:aws:cloudformation:us-east-1:072560545057:stack/amplify-smartreviser-dev-134826/c1f51950-d867-11ed-9ab0-12eaef6d6d17",
+      "AmplifyAppId": "d3vlyuctihqwy1"
+    },
+    "categories": {
+      "auth": {
+        "smartrevisera64c8946a64c8946": {}
+      },
+      "api": {
+        "smartreviser": {}
+      },
+      "hosting": {
+        "amplifyhosting": {
+          "appId": "d3vlyuctihqwy1",
+          "type": "cicd"
+        }
+      }
+    }
+  }
+}

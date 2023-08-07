@@ -1,0 +1,55 @@
+@use "sass:map";
+
+$colors: (
+  "almost-white": rgb(245 245 245),
+  "dark": rgb(0 0 0),
+  "error": rgb(240 0 0),
+  "lighter-blue": rgb(243 246 245),
+  "light-blue": rgb(232 240 254),
+  "light-grey": rgb(210 213 212),
+  "primary": rgb(52 4 68),
+  "moderate-blue": rgb(3 181 194),
+  "secondary": rgb(182 48 75),
+  "success": rgb(20 160 20),
+  "tertiary": rgb(11 83 68),
+  "text": rgb(80 80 80)
+);
+
+$constants: (
+  "border-radius": 3px,
+  "side-padding": 16px,
+  "top-margin": 20px
+);
+
+$font-families: (
+  "primary": (
+    "Rubik",
+    sans-serif
+  ),
+
+  "secondary": (
+    "Kanit",
+    sans-serif
+  )
+);
+
+@mixin font-family($family) {
+  @if not map-has-key($font-families, $family) {
+    @error "Unsupported font family: '#{$family}'";
+  }
+  font-family: map.get($font-families, $family);
+}
+
+@function get-color($color) {
+  @if not map-has-key($colors, $color) {
+    @error "Unsupported color: '#{$color}'";
+  }
+  @return map.get($colors, $color);
+}
+
+@function get-constant($constant) {
+  @if not map-has-key($constants, $constant) {
+    @error "Unsupported constant: '#{$constant}'";
+  }
+  @return map.get($constants, $constant);
+}

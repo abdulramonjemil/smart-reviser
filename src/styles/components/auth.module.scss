@@ -1,0 +1,163 @@
+@use "sass:color";
+@use "../partials/utils";
+
+$input-container-padding: 12px;
+
+.AuthForm {
+  &__OuterContainer {
+    margin-top: utils.get-constant(top-margin);
+    padding: 0 20px;
+  }
+
+  &__InnerContainer {
+    margin: 0 auto;
+    max-width: 350px;
+  }
+
+  &__SiteLogo {
+    display: flex;
+    justify-content: center;
+    margin-top: utils.get-constant(top-margin);
+
+    img {
+      height: auto;
+      width: 70px;
+    }
+  }
+
+  &__Info {
+    margin-top: 10px;
+
+    h1 {
+      color: utils.get-color(primary);
+      font-size: 2.2rem;
+      font-weight: 700;
+      text-align: center;
+    }
+  }
+
+  &__Feedback {
+    border-radius: utils.get-constant(border-radius);
+    border-width: 1px;
+    border-style: solid;
+    font-size: 0.9rem;
+    line-height: 1.2rem;
+    margin-top: utils.get-constant(top-margin);
+    padding: 12px;
+
+    &_error {
+      background-color: color.change(utils.get-color(error), $alpha: 0.08);
+      border-color: utils.get-color(error);
+    }
+
+    &_success {
+      background-color: color.change(utils.get-color(success), $alpha: 0.1);
+      border-color: utils.get-color(success);
+    }
+  }
+
+  &__Element {
+    background-color: utils.get-color(lighter-blue);
+    border: 1px solid utils.get-color(light-grey);
+    border-radius: utils.get-constant(border-radius);
+    box-shadow: 0 0 20px 0 rgb(0 0 0 / 10%);
+    margin-top: utils.get-constant(top-margin);
+    padding: 0 $input-container-padding $input-container-padding;
+  }
+}
+
+.TextInput {
+  &__Container {
+    margin-top: utils.get-constant(top-margin);
+  }
+
+  &__Label {
+    color: utils.get-color(text);
+  }
+
+  &__Element {
+    background-color: white;
+    border: 1px solid color.change(utils.get-color(text), $alpha: 0.2);
+    border-radius: utils.get-constant(border-radius);
+    font-weight: 400;
+    margin-top: 10px;
+    padding: 10px;
+    width: 100%;
+
+    $input-element-outline-width: 3px;
+
+    &:focus {
+      outline: $input-element-outline-width solid
+        color.change(utils.get-color(tertiary), $alpha: 0.2);
+    }
+
+    &:invalid:not(:placeholder-shown, :focus) {
+      border: 1px solid utils.get-color(error);
+      outline: $input-element-outline-width solid
+        color.change(utils.get-color(error), $alpha: 0.2);
+    }
+  }
+
+  &__Requirement {
+    display: none;
+    font-size: 0.85rem;
+    margin-top: 10px;
+
+    .TextInput__Element:focus + & {
+      display: block;
+    }
+  }
+}
+
+.SubmitButton {
+  margin-top: utils.get-constant(top-margin);
+
+  $submit-button-color: utils.get-color(secondary);
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  &__Loader {
+    animation: spin 0.8s linear infinite;
+    border: 2px solid utils.get-color(almost-white);
+    border-top-color: transparent;
+    border-radius: 50%;
+    display: inline-block;
+    height: 20px;
+    width: 20px;
+  }
+
+  button {
+    background-color: $submit-button-color;
+    border-radius: utils.get-constant(border-radius);
+    color: utils.get-color(almost-white);
+    cursor: pointer;
+    font-weight: 500;
+    height: 45px;
+    outline: none;
+    padding: $input-container-padding;
+    text-align: center;
+    transition: background-color linear 0.1s;
+    width: 100%;
+
+    &:disabled {
+      cursor: not-allowed;
+    }
+
+    &:focus {
+      text-decoration: underline;
+    }
+
+    &:focus,
+    &:hover {
+      background-color: color.change($submit-button-color, $lightness: 35%);
+    }
+  }
+}

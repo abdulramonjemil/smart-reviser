@@ -1,0 +1,56 @@
+@use "sass:color";
+@use "../../partials/utils";
+
+.Container {
+  padding: 20px 0 50px;
+}
+
+.EmailInputToConfirm {
+  &:disabled {
+    background-color: utils.get-color(light-blue);
+    cursor: not-allowed;
+  }
+}
+
+.ResendCodePrompt {
+  font-size: 0.9rem;
+  margin-top: 10px;
+
+  &__Button {
+    color: utils.get-color(moderate-blue);
+    font-weight: 400;
+    text-decoration: underline;
+  }
+}
+
+.ModeTogglerContainer {
+  margin-top: utils.get-constant(top-margin);
+
+  button {
+    background-color: utils.get-color(lighter-blue);
+    border: 1px solid utils.get-color(light-grey);
+    border-radius: utils.get-constant(border-radius);
+    cursor: pointer;
+    display: block;
+    margin: auto;
+    transition: background-color 0.1s linear;
+    width: max-content;
+    padding: 12px;
+
+    &:disabled {
+      cursor: not-allowed;
+    }
+
+    &:focus {
+      outline: 2px solid utils.get-color(primary);
+    }
+
+    &:focus,
+    &:hover:not(:disabled) {
+      background-color: color.change(
+        utils.get-color(lighter-blue),
+        $blackness: 10%
+      );
+    }
+  }
+}

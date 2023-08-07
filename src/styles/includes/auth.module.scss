@@ -1,0 +1,10 @@
+@use "../partials/utils";
+
+.AuthPrompt {
+  margin-top: utils.get-constant(top-margin);
+  text-align: center;
+
+  &__Link {
+    color: utils.get-color(moderate-blue);
+  }
+}

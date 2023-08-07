@@ -1,0 +1,32 @@
+{
+  "extends": "stylelint-config-standard-scss",
+  "rules": {
+    "at-rule-empty-line-before": [
+      "always",
+      {
+        "except": ["blockless-after-blockless", "first-nested"],
+        "ignore": ["after-comment", "inside-block"]
+      }
+    ],
+    "declaration-empty-line-before": null,
+    "max-nesting-depth": 3,
+    "property-no-unknown": [
+      true,
+      {
+        "ignoreSelectors": [":export"]
+      }
+    ],
+    "property-no-vendor-prefix": null,
+    "scss/at-if-no-null": null,
+    "scss/at-use-no-unnamespaced": true,
+    "scss/dollar-variable-empty-line-before": null,
+    "scss/double-slash-comment-empty-line-before": null,
+    "scss/operator-no-newline-after": null,
+    "scss/operator-no-newline-before": null,
+    "selector-class-pattern": null,
+    "selector-pseudo-class-no-unknown": [
+      true,
+      { "ignorePseudoClasses": ["export"] }
+    ]
+  }
+}

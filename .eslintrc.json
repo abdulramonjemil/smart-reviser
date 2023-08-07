@@ -1,0 +1,27 @@
+{
+  "extends": ["airbnb", "next/core-web-vitals", "prettier"],
+  "env": { "browser": true },
+  "parserOptions": {
+    "ecmaVersion": 2020
+  },
+  "rules": {
+    "@next/next/no-img-element": "off",
+    "react/react-in-jsx-scope": "off",
+    "react/prop-types": "off",
+    "react/no-unescaped-entities": "off",
+    "react/jsx-no-bind": "off",
+    "react/jsx-props-no-spreading": "off",
+    "no-param-reassign": "off",
+    "jsx-a11y/anchor-is-valid": "off",
+    "import/extensions": ["error", "always", { "js": "never", "jsx": "never" }],
+    "lines-between-class-members": [
+      "error",
+      "always",
+      { "exceptAfterSingleLine": true }
+    ],
+    "no-restricted-syntax": "off",
+    "arrow-parens": ["error", "always"],
+    "semi": ["error", "never"],
+    "quotes": ["error", "double"]
+  }
+}
